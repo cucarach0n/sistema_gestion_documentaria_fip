@@ -7,6 +7,8 @@ class UsuarioAdmin(admin.ModelAdmin):
 class Contrasena_reinicioAdmin(admin.ModelAdmin):
     list_display = ('id','correo','token','fechaCambio','estado')
 
+#class Contrasena_reinicioAdmin(admin.ModelAdmin):
+#    list_display = ('id','correo','token','fechaCambio','estado')
 # Register your models here.
 admin.site.register(Usuario,UsuarioAdmin)
 admin.site.register(Contrasena_reinicio,Contrasena_reinicioAdmin)

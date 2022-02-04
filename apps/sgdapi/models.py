@@ -188,7 +188,7 @@ class PropiedadDocumento(models.Model):
 
 class Documento(models.Model):
     id = models.AutoField(primary_key = True)
-    documento_file = models.FileField('Archivo del documento', upload_to="files/",blank = True,null = True)
+    documento_file = models.FileField('Archivo del documento', upload_to="",blank = True,null = True)
     nombreDocumento = models.CharField('Nombres del documento',max_length=100,null = False, blank = False)
     fechaSubida = models.DateField('Fecha de subidas',auto_now = False,auto_now_add = True) 
     extension = models.CharField('Extension de los archivos subidos',max_length=10,null = True, blank = True)

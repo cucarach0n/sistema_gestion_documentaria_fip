@@ -5,5 +5,5 @@ from apps.sgdapi.models import Documento
 class DocumentoCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Documento
-        exclude = ('fechaSubida','extension')
+        exclude = ('fechaSubida','extension',)
     

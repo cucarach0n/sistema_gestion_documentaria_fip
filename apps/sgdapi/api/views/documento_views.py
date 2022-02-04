@@ -8,10 +8,13 @@ from datetime import datetime
 from pathlib import Path
 from django.core.files.storage import FileSystemStorage
 
-from apps.sgdapi.util2 import DocumentoOCR
-class DocumentoCreateAPIView(generics.CreateAPIView):
+from apps.sgdapi.util import DocumentoOCR
+#get/post
+class DocumentoCreateAPIView(generics.ListCreateAPIView):
     serializer_class = DocumentoCreateSerializer
 
+    queryset = DocumentoCreateSerializer.Meta.model.objects.all()
+    
     def post(self,request):
         documento_serializer = self.serializer_class(data = request.data)
         
@@ -20,7 +23,7 @@ class DocumentoCreateAPIView(generics.CreateAPIView):
             fs = FileSystemStorage()
             file = fs.save(request.FILES['documento_file'].name,request.FILES['documento_file'])
             fileurl = fs.url(file)
-            #print(fileurl)
+            print(fileurl)
             documentoRenderisado = DocumentoOCR(fileurl)
             text = str(documentoRenderisado.obtenerTexto())
             documento = documento_serializer.save()
