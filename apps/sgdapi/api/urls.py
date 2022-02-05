@@ -3,12 +3,8 @@ from django.urls import path
 from apps.sgdapi.api.api import *
 from apps.sgdapi.api.views.general_views import DocumentoListAPIView
 from apps.sgdapi.api.views.documento_views import DocumentoCreateAPIView
-from django.conf import settings
-from django.conf.urls.static import static
-from django.urls import path,re_path
-from django.views.static import serve
 
-re_path(r'media/(?P<path>.*)$',serve,{'document_root':settings.MEDIA_ROOT})
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('usuario/',usuario_api_view,name = 'usuario_api'),

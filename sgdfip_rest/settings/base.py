@@ -47,6 +47,7 @@ LOCAL_APPS =[
 ]
 
 THIRD_APPS = [
+    'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
     'simple_history',
@@ -57,6 +58,7 @@ INSTALLED_APPS = BASE_APPS + LOCAL_APPS + THIRD_APPS
 TOKEN_EXPIRED_AFTER_SECONDS = 900
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -120,6 +122,14 @@ USE_I18N = True
 USE_TZ = True
 
 AUTH_USER_MODEL = 'users.User'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000"
+]
+CORS_ORIGIN_WHITELIST = [
+    "http://localhost:3000"
+]
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/

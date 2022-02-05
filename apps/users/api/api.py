@@ -45,13 +45,13 @@ class userActivateRetrieveAPIView(generics.RetrieveAPIView):
         return self.get_serializer().Meta.model.objects.filter(estado = 1)
 
     def get(self,request,token=None):
-        print(token)
         Contrasena_reinicioUpdate = Contrasena_reinicio.objects.filter(token = token,estado = 1).first()
         if Contrasena_reinicioUpdate: 
             user = User.objects.filter(correo = Contrasena_reinicioUpdate.correo).first()
             if user:
                 Contrasena_reinicioUpdate.estado = 0
                 user.estado = 1
+                user.is_active = True
                 Contrasena_reinicioUpdate.save()
                 user.save();
                 return Response({'Mensaje':'Usuario validado correctamente'},status = status.HTTP_200_OK)
