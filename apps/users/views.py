@@ -1,22 +1,28 @@
 
 from django.contrib.sessions.models import Session
-from datetime import datetime
+from datetime import date, datetime
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
+from apps.users.authenticacion_mixings import Authentication
 from apps.users.api.serializers import UserTokenSerializer
 
-class UserToken(APIView):
+
+class UserToken(Authentication,APIView):
     def get(self,request,*args,**kwargs):
-        username = request.GET.get('username')
-        print(username)
+        print(self.user)
+        #username = request.GET.get('username')
+        #print(username)
         try:
-            user_token = Token.objects.get(user = UserTokenSerializer().Meta.model.objects.filter(nombreUsuario = username).first())
-            print(user_token)
+            print(datetime.now())
+            user_token,create = Token.objects.get_or_create(user = self.user)
+            print(user_token.created)
+            user = UserTokenSerializer(self.user)
             return Response({
-                'token': user_token.key
+                'token': user_token.key,
+                'user' : user.data
                 },status = status.HTTP_200_OK)
         except:
             return Response({
@@ -38,6 +44,7 @@ class Login(ObtainAuthToken):
                         'mensaje':'Inicio de sesion exitoso'
                     },status = status.HTTP_201_CREATED)
                 else:
+                    
                     all_sessions = Session.objects.filter(expire_date__gte = datetime.now())
                     if all_sessions.exists():
                         for session in all_sessions:
@@ -51,7 +58,8 @@ class Login(ObtainAuthToken):
                         'user':user_serializer.data,
                         'mensaje':'Inicio de sesion exitoso'
                     },status = status.HTTP_201_CREATED) 
-
+                    
+                    #return Response({'error':'Ya se ha iniciado sesion con este usuario'},status = status.HTTP_409_CONFLICT)
             else:
                 return Response({'error':'Este usuario no puede iniciar sesion'},status = status.HTTP_401_UNAUTHORIZED)
         else:

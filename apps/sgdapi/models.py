@@ -12,8 +12,8 @@ class Usuario(AbstractBaseUser,models.Model):
     password = models.CharField('Contraseña',max_length=100,null = False, blank = False)
     avatar = models.ImageField('Imagen del usuario',upload_to='avatars/', blank = True, null= True)
     estado = models.SmallIntegerField('Estado del usuario',null = True, default=0, blank = False)
-    fechaCreacion = models.DateField('Fecha de Creacion',auto_now = True,auto_now_add = False) 
-    fechaActualizacion = models.DateField('Fecha de actualizacion',auto_now = False,auto_now_add = True)
+    fechaCreacion = models.DateTimeField('Fecha de Creacion',auto_now = True,auto_now_add = False) 
+    fechaActualizacion = models.DateTimeField('Fecha de actualizacion',auto_now = False,auto_now_add = True)
     class Meta():
         verbose_name = 'Usuario'
         verbose_name_plural = 'Usuarios'
@@ -26,7 +26,7 @@ class Contrasena_reinicio(models.Model):
     id = models.AutoField(primary_key = True)
     correo = models.EmailField('Correo usuario',max_length=255,null = False, blank = False, unique=True)
     token = models.CharField('token validador',max_length=40,null = False, blank = False, unique=True)
-    fechaCambio = models.DateField('Fecha de Cambio',auto_now = False,auto_now_add = True) 
+    fechaCambio = models.DateTimeField('Fecha de Cambio',auto_now = False,auto_now_add = True) 
     estado = models.SmallIntegerField('Estado del token',null = True, default=1, blank = False)
     historical = HistoricalRecords()
 
@@ -87,7 +87,7 @@ class Tipo_carpeta(models.Model):
 class SubCarpeta(models.Model):
     id = models.AutoField(primary_key = True)
     nombreTipo = models.CharField('Nombres de sub carpetas',max_length=45,null = False, blank = False)
-    fechaCreacion = models.DateField('Fecha de creaciones',auto_now = True,auto_now_add = False) 
+    fechaCreacion = models.DateTimeField('Fecha de creaciones',auto_now = True,auto_now_add = False) 
     historical = HistoricalRecords()
 
     @property
@@ -145,7 +145,7 @@ class AreaDocumento(models.Model):
 class Carpeta(models.Model):
     id = models.AutoField(primary_key = True)
     nombre = models.CharField('Nombres de las carpetas',max_length=255,null = False, blank = False)
-    fechaCreacion = models.DateField('Fecha de Creacion',auto_now = True,auto_now_add = False) 
+    fechaCreacion = models.DateTimeField('Fecha de Creacion',auto_now = True,auto_now_add = False) 
     tipoCarpeta = models.ForeignKey('Tipo_carpeta',on_delete = models.CASCADE)
     subCarpeta = models.ForeignKey('SubCarpeta',on_delete = models.CASCADE)
     historical = HistoricalRecords()
@@ -190,7 +190,7 @@ class Documento(models.Model):
     id = models.AutoField(primary_key = True)
     documento_file = models.FileField('Archivo del documento', upload_to="",blank = True,null = True)
     nombreDocumento = models.CharField('Nombres del documento',max_length=100,null = False, blank = False)
-    fechaSubida = models.DateField('Fecha de subidas',auto_now = False,auto_now_add = True) 
+    fechaSubida = models.DateTimeField('Fecha de subidas',auto_now = False,auto_now_add = True) 
     extension = models.CharField('Extension de los archivos subidos',max_length=10,null = True, blank = True)
     '''
     carpeta = models.ForeignKey('Carpeta',on_delete = models.CASCADE)
@@ -216,7 +216,7 @@ class Documento(models.Model):
 class DocumentoOcr(models.Model):
     id = models.AutoField(primary_key = True)
     contenido = models.TextField('Contenidos del documento', null = False, blank = False)
-    fechaRegistro = models.DateField('Fecha de registro de converciones',auto_now = False,auto_now_add = True) 
+    fechaRegistro = models.DateTimeField('Fecha de registro de converciones',auto_now = False,auto_now_add = True) 
     documento = models.ForeignKey('Documento',on_delete = models.CASCADE)
     historical = HistoricalRecords()
 

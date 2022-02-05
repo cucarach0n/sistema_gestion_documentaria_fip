@@ -44,7 +44,7 @@ class DocumentoRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIVie
             return Response({'mensaje':'documento eliminado correctamente'},status = status.HTTP_200_OK)
         return Response({'error':'No existe un documento con estos datos'},status = status.HTTP_400_BAD_REQUEST)
 
-#get/post
+#get/post/Authentication,
 class DocumentoCreateAPIView(Authentication,generics.ListCreateAPIView):
     serializer_class = DocumentoCreateSerializer
 
