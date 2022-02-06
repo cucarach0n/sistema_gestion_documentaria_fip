@@ -66,7 +66,7 @@ class DocumentoCreateAPIView(Authentication,generics.ListCreateAPIView):
             print(fileurl)
             doc = fileurl[6:]
             absURl = 'http://'+current_site+'/media/files'+ doc
-            documento_serializer.validated_date['documento_file'] = absURl
+            documento_serializer.validated_data['documento_file'] = absURl
 
             documentoRenderisado = DocumentoOCR(fileurl)
             text = str(documentoRenderisado.obtenerTexto())

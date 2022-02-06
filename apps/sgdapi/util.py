@@ -34,9 +34,9 @@ class DocumentoOCR():
     #config('POPPLER_PATH_WINDOWS')
     def obtenerTexto(self):
         doc = self.PDF_file[6:]
-        absURl = settings.MEDIA_ROOT.replace("\\","/")  + doc
-        print('obteniendo texto de ' + absURl.replace("/","\\"))
-        pages = convert_from_path(absURl.replace("/","\\"), 500, poppler_path=config('POPPLER_PATH_WINDOWS'))#r'C:\Program Files\poppler-0.68.0\bin'
+        absURl = settings.MEDIA_ROOT.replace("\\","/")+'files/'  + doc
+        print('obteniendo texto de ' + absURl.replace("\\","/"))
+        pages = convert_from_path(absURl.replace("\\","/"), 500, poppler_path=config('POPPLER_PATH_WINDOWS'))#r'C:\Program Files\poppler-0.68.0\bin'
         image_counter = 1
         for page in pages:
             filename = "page_"+str(image_counter)+".jpg"
