@@ -8,7 +8,7 @@ ALLOWED_HOSTS = []
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-
+'''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -19,7 +19,17 @@ DATABASES = {
         'PORT': '',
     }
 }
-
+'''
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'portalmy_uni',
+        'USER': 'portalmy_uniuser',
+        'PASSWORD':'unisistema2022',
+        'HOST': 'portalmybot.com',
+        'PORT': '',
+    }
+}
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 

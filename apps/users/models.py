@@ -4,10 +4,10 @@ from simple_history.models import HistoricalRecords
 
 
 class UserManager(BaseUserManager):
-    def _create_user(self, username, email, name,last_name, password, is_staff, is_superuser, **extra_fields):
+    def _create_user(self, nombreUsuario, correo, name,last_name, password, is_staff, is_superuser, **extra_fields):
         user = self.model(
-            username = username,
-            email = email,
+            nombreUsuario = nombreUsuario,
+            correo = correo,
             name = name,
             last_name = last_name,
             is_staff = is_staff,
@@ -18,14 +18,14 @@ class UserManager(BaseUserManager):
         user.save(using=self.db)
         return user
 
-    def create_user(self, username, email, name,last_name, password=None, **extra_fields):
-        return self._create_user(username, email, name,last_name, password, False, False, **extra_fields)
+    def create_user(self, nombreUsuario, correo, name,last_name, password=None, **extra_fields):
+        return self._create_user(nombreUsuario, correo, name,last_name, password, False, False, **extra_fields)
 
-    def create_superuser(self, username, email, name,last_name, password=None, **extra_fields):
-        return self._create_user(username, email, name,last_name, password, True, True, **extra_fields)
+    def create_superuser(self, nombreUsuario, correo, name,last_name, password=None, **extra_fields):
+        return self._create_user(nombreUsuario, correo, name,last_name, password, True, True, **extra_fields)
 
 class User(AbstractBaseUser, PermissionsMixin):
-    nombreUsuario = models.CharField(max_length = 255, unique = True)
+    nombreUsuario = models.CharField('Usuario',max_length = 255, unique = True)
     correo = models.EmailField('Correo Electrónico',max_length = 255, unique = True,)
     name = models.CharField('Nombres', max_length = 255, blank = True, null = True)
     last_name = models.CharField('Apellidos', max_length = 255, blank = True, null = True)
@@ -41,7 +41,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = 'Usuarios'
 
     USERNAME_FIELD = 'nombreUsuario'
-    REQUIRED_FIELDS = ['correo']
+    REQUIRED_FIELDS = ['correo','name','last_name']
 
     def __str__(self):
         return f'{self.correo} {self.nombreUsuario}'
