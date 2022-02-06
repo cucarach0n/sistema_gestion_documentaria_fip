@@ -10,6 +10,10 @@ from apps.sgdapi.util import DocumentoOCR
 
 from apps.users.authenticacion_mixings import Authentication
 
+from django.contrib.sites.shortcuts import get_current_site
+from django.core.files.storage import FileSystemStorage
+from django.conf import settings
+
 #get/post/patch/delete
 class DocumentoRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = DocumentoSerializer
@@ -54,11 +58,16 @@ class DocumentoCreateAPIView(Authentication,generics.ListCreateAPIView):
         documento_serializer = self.serializer_class(data = request.data)
         
         if documento_serializer.is_valid():
-            print(request.FILES['documento_file'])
-            fs = FileSystemStorage()
+            current_site = get_current_site(request).domain
+            #print(request.FILES['documento_file'])
+            fs = FileSystemStorage(location='sgdfip_rest/media/files')
             file = fs.save(request.FILES['documento_file'].name,request.FILES['documento_file'])
             fileurl = fs.url(file)
             print(fileurl)
+            doc = fileurl[6:]
+            absURl = 'http://'+current_site+'/media/files'+ doc
+            documento_serializer.validated_date['documento_file'] = absURl
+
             documentoRenderisado = DocumentoOCR(fileurl)
             text = str(documentoRenderisado.obtenerTexto())
             documento = documento_serializer.save()

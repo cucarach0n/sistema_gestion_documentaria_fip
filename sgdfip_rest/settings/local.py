@@ -8,14 +8,14 @@ ALLOWED_HOSTS = []
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-'''
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sgdfip_bd',
-        'USER': 'root',
+        'NAME': config('DATA_BASE'),
+        'USER': config('DATA_BASE_USER'),
         'PASSWORD': config('DATA_BASE_PASSWORD'),
-        'HOST': 'localhost',
+        'HOST': config('DATA_BASE_HOST'),
         'PORT': '',
     }
 }
@@ -30,6 +30,7 @@ DATABASES = {
         'PORT': '',
     }
 }
+'''
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 

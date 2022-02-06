@@ -29,7 +29,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     correo = models.EmailField('Correo Electrónico',max_length = 255, unique = True,)
     name = models.CharField('Nombres', max_length = 255, blank = True, null = True)
     last_name = models.CharField('Apellidos', max_length = 255, blank = True, null = True)
-    avatar = models.ImageField('Imagen de perfil', upload_to='perfil/', max_length=255, null=True, blank = True)
+    avatar = models.ImageField('Imagen de perfil', upload_to='avatars/', max_length=255, null=True, blank = True)
     estado = models.SmallIntegerField('Estado del usuario',null = True, default=0, blank = False)
     is_active = models.BooleanField(default = False)
     is_staff = models.BooleanField(default = False)

@@ -10,8 +10,10 @@ from apps.sgdapi.api.serializers.general_serializers import Contrasena_reinicioS
 from apps.sgdapi.util import send_email
 from datetime import datetime
 from django.utils.crypto import get_random_string
-
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.files.storage import FileSystemStorage
+from django.conf import settings
+
 
 class UserAPIView(APIView):
     def get(self,request):
@@ -23,7 +25,16 @@ class UserCreateAPIView(generics.CreateAPIView):
     def post(self,request):
         serializer = self.serializer_class(data = request.data,context = request.data)
         if serializer.is_valid():
+            current_site = get_current_site(request).domain
+            fs = FileSystemStorage(location='sgdfip_rest/media/avatars/')
+            file = fs.save(request.FILES['avatar'].name,request.FILES['avatar'])
+            fileurl = fs.url(file)
+            print(fileurl)
+            doc = fileurl[6:]
+            absURl = 'http://'+current_site+'/media/avatars'+ doc
+            serializer.validated_data['avatar'] = absURl
             user = serializer.save()
+
             datos = {'correo':user.correo,
                     'token':get_random_string(length=40),
                     'fechaCambio':datetime.today().strftime('%Y-%m-%d'),
@@ -31,8 +42,8 @@ class UserCreateAPIView(generics.CreateAPIView):
             contrasena_reinicioO = Contrasena_reinicioSerializer(data = datos)
             if contrasena_reinicioO.is_valid():
                 userSendEmail = contrasena_reinicioO.save()
-                current_site = get_current_site(request).domain
-                absurl = 'http://'+current_site+'/usuario/validar'+'?token='+userSendEmail.token
+                
+                absurl = 'http://'+current_site+'/usuario/validar/'+userSendEmail.token
                 send_email({'email':'devalo19@gmail.com','domain': str(absurl)})
 
             return Response({'Mensaje':'Se registro el usuario correctamente'},status = status.HTTP_200_OK)

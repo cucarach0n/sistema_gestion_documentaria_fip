@@ -11,6 +11,7 @@ from apps.users.api.serializers import UserTokenSerializer
 
 
 class UserToken(Authentication,APIView):
+    
     def get(self,request,*args,**kwargs):
         print(self.user)
         #username = request.GET.get('username')
