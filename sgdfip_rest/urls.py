@@ -15,21 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-from apps.users.views import Login,Logout,UserToken
-from django.urls import path,re_path
-from django.views.static import serve
+from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-
-    path('',Login.as_view(),name = 'login'),
-    path('logout',Logout.as_view(),name = 'logout'),
-    path('refresh-token/',UserToken.as_view(),name = 'refresh_token'),
-
     path('usuario/', include('apps.users.api.urls')),
-    path('sgdapi/', include('apps.sgdapi.api.urls')),
-    #path('media/(?P<path>.*)$',serve,{'document_root':settings.MEDIA_ROOT}),
+    path('sgdapi/', include('apps.sgdapi.api.routers')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-#re_path(r'media/(?P<path>.*)$',serve,{'document_root':settings.MEDIA_ROOT})
