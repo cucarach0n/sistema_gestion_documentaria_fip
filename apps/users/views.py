@@ -17,16 +17,15 @@ class UserToken(Authentication,APIView):
         #username = request.GET.get('username')
         #print(username)
         try:
-            print(datetime.now())
             user_token,create = Token.objects.get_or_create(user = self.user)
             print(user_token.created)
             user = UserTokenSerializer(self.user)
-            if user.is_valid():
-                return Response({
-                    'token': user_token.key,
-                    'user' : user.data
-                    },status = status.HTTP_200_OK)
             
+            return Response({
+                'token': user_token.key,
+                'user' : user.data
+                },status = status.HTTP_200_OK)
+    
         except:
             return Response({
                 'error': 'Credenciales enviadas incorrectas'

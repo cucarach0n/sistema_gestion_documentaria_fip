@@ -14,7 +14,7 @@ from django.conf import settings
 
 from rest_framework import viewsets
 
-class DocumentoViewSet(Authentication,viewsets.ViewSet):
+class DocumentoViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = DocumentoCreateSerializer
     def get_queryset(self,pk=None):
         if pk is None:

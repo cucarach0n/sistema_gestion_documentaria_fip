@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from apps.users.models import User
 from apps.users.api.serializers import UserSerializer,UserCreateSerializer
+from apps.sgdapi.api.serializers.contrasenaReinicio_serializer import ContrasenaReinicioActivateSerializer
 from rest_framework import status
 from rest_framework import generics
 from apps.sgdapi.api.serializers.general_serializers import Contrasena_reinicioSerializer
@@ -51,8 +52,8 @@ class UserCreateAPIView(generics.CreateAPIView):
         return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
 
 
-class userActivateRetrieveAPIView(generics.RetrieveAPIView):
-    serializer_class = Contrasena_reinicioSerializer
+class userActivateRetrieveAPIView(APIView):
+    serializer_class = ContrasenaReinicioActivateSerializer
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter(estado = 1)
 
