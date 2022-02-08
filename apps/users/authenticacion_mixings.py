@@ -25,8 +25,9 @@ class Authentication(object):
             if user != None:
                 self.user = user
                 return user
+            return Response({'error':'No se valido correctamente'},status = status.HTTP_400_BAD_REQUEST)
             print(token)
-            
+             
         return None
     def dispatch(self,request,*args,**kwargs):
         user = self.get_user(request)

@@ -1,5 +1,6 @@
 
 
+from distutils import extension
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import generics
@@ -16,6 +17,7 @@ from rest_framework import viewsets
 
 class DocumentoViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = DocumentoCreateSerializer
+    extension = ["jpg","png","xlsx","docx","pptx","pdf"]
     def get_queryset(self,pk=None):
         if pk is None:
             return self.serializer_class().Meta.model.objects.all()
@@ -32,14 +34,22 @@ class DocumentoViewSet(Authentication,viewsets.GenericViewSet):
             fs = FileSystemStorage(location='sgdfip_rest/media/files')
             file = fs.save(request.FILES['documento_file'].name,request.FILES['documento_file'])
             fileurl = fs.url(file)
+            
+
             print(fileurl)
             doc = fileurl[6:]
             absURl = 'http://'+current_site+'/media/files'+ doc
             documento_serializer.validated_data['documento_file'] = absURl
-
+            
+            
             documentoRenderisado = DocumentoOCR(fileurl)
             text = str(documentoRenderisado.obtenerTexto())
             documento = documento_serializer.save()
+            for ext in self.extension:
+                if ext in fileurl:
+                    documento.extension = ext
+                    documento.save()
+             
             documentoOCR = {
                 'contenido' : text,
                 'fechaRegistro' : datetime.today().strftime('%Y-%m-%d'),
