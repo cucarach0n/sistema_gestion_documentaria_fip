@@ -3,7 +3,7 @@ from .base import *
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['150.230.71.234']
 
 
 # Database
@@ -12,10 +12,10 @@ ALLOWED_HOSTS = []
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sgdfip_bd',
-        'USER': 'root',
-        'PASSWORD': '2901508352688159',
-        'HOST': 'localhost',
+        'NAME': config('DATA_BASE'),
+        'USER': config('DATA_BASE_USER'),
+        'PASSWORD': config('DATA_BASE_PASSWORD'),
+        'HOST': config('DATA_BASE_HOST'),
         'PORT': '',
     }
 }
