@@ -5,16 +5,18 @@ from rest_framework import generics
 from apps.sgdapi.api.serializers.documento_serializers import DocumentoCreateSerializer
 from apps.sgdapi.api.serializers.general_serializers import DocumentoOcrSerializer,DocumentoSerializer
 from datetime import datetime
-from django.core.files.storage import FileSystemStorage
 from apps.sgdapi.util import DocumentoOCR
-
 from apps.users.authenticacion_mixings import Authentication
-
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 
-#get/post/patch/delete
+
+
+
+
+#get/post/patch/dele
+'''
 class DocumentoRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = DocumentoSerializer
 
@@ -47,7 +49,7 @@ class DocumentoRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIVie
             documento.save()
             return Response({'mensaje':'documento eliminado correctamente'},status = status.HTTP_200_OK)
         return Response({'error':'No existe un documento con estos datos'},status = status.HTTP_400_BAD_REQUEST)
-
+'''
 #get/post/Authentication,
 class DocumentoCreateAPIView(Authentication,generics.ListCreateAPIView):
     serializer_class = DocumentoCreateSerializer

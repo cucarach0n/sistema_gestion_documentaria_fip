@@ -4,8 +4,12 @@ from apps.users.models import User
 class UserTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['nombreUsuario','correo','name','last_name']
-
+        fields = ['nombreUsuario','correo','name','last_name','avatar']
+    def validate_avatar(self,value):
+        return value
+    def validate(self,data):
+        print('usuario token validado!')
+        return data
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

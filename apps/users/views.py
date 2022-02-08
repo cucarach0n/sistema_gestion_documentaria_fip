@@ -8,10 +8,10 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from apps.users.authenticacion_mixings import Authentication
 from apps.users.api.serializers import UserTokenSerializer
-
+from django.contrib.auth import authenticate
 
 class UserToken(Authentication,APIView):
-    
+
     def get(self,request,*args,**kwargs):
         print(self.user)
         #username = request.GET.get('username')
@@ -21,10 +21,12 @@ class UserToken(Authentication,APIView):
             user_token,create = Token.objects.get_or_create(user = self.user)
             print(user_token.created)
             user = UserTokenSerializer(self.user)
-            return Response({
-                'token': user_token.key,
-                'user' : user.data
-                },status = status.HTTP_200_OK)
+            if user.is_valid():
+                return Response({
+                    'token': user_token.key,
+                    'user' : user.data
+                    },status = status.HTTP_200_OK)
+            
         except:
             return Response({
                 'error': 'Credenciales enviadas incorrectas'
@@ -36,8 +38,13 @@ class Login(ObtainAuthToken):
         if login_serializer.is_valid():
             user = login_serializer.validated_data['user']
             if user.is_active:
+                user = authenticate(username=request.data['username'],password=request.data['password'])
+                if user is not None:
+                    print('"Usuario autenticado')
+                print('usuario autenticado')
                 token,created = Token.objects.get_or_create(user = user)
                 user_serializer = UserTokenSerializer(user)
+                print(user.avatar)
                 if created:
                     return Response({
                         'token':token.key,
@@ -61,6 +68,7 @@ class Login(ObtainAuthToken):
                     },status = status.HTTP_201_CREATED) 
                     
                     #return Response({'error':'Ya se ha iniciado sesion con este usuario'},status = status.HTTP_409_CONFLICT)
+                return Response({'error':'error en validar avatar'},status = status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({'error':'Este usuario no puede iniciar sesion'},status = status.HTTP_401_UNAUTHORIZED)
         else:

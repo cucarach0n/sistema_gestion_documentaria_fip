@@ -31,7 +31,8 @@ class UserCreateAPIView(generics.CreateAPIView):
             fileurl = fs.url(file)
             print(fileurl)
             doc = fileurl[6:]
-            absURl = 'http://'+current_site+'/media/avatars'+ doc
+            #absURl = 'http://'+current_site+'/media/avatars'+ doc
+            absURl = '/avatars'+ doc
             serializer.validated_data['avatar'] = absURl
             user = serializer.save()
 
