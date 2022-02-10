@@ -12,9 +12,19 @@ from apps.users.authenticacion_mixings import Authentication
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
+import os
 
 from rest_framework import viewsets
 
+def supermakedirs(path, mode):
+    if not path or os.path.exists(path):
+        return []
+    (head, tail) = os.path.split(path)
+    res = supermakedirs(head, mode)
+    os.mkdir(path)
+    os.chmod(path, mode)
+    res += [path]
+    return res
 class DocumentoViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = DocumentoCreateSerializer
     extension = ["jpg","png","xlsx","docx","pptx","pdf"]
@@ -30,15 +40,15 @@ class DocumentoViewSet(Authentication,viewsets.GenericViewSet):
         
         if documento_serializer.is_valid():
             current_site = get_current_site(request).domain
-            #print(request.FILES['documento_file'])
-            fs = FileSystemStorage(location='sgdfip_rest/media/files')
+            ruta = settings.MEDIA_ROOT+'files/'
+            fs = FileSystemStorage(location=ruta)
             file = fs.save(request.FILES['documento_file'].name,request.FILES['documento_file'])
             fileurl = fs.url(file)
             
 
             print(fileurl)
-            doc = fileurl[6:]
-            absURl = 'http://'+current_site+'/media/files'+ doc
+            doc = fileurl[7:]
+            absURl = 'http://'+current_site+'/media/files/'+ doc
             documento_serializer.validated_data['documento_file'] = absURl
             
             

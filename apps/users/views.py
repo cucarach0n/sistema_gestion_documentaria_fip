@@ -1,4 +1,5 @@
 
+from lib2to3.pgen2 import token
 from django.contrib.sessions.models import Session
 from datetime import date, datetime
 from rest_framework.views import APIView
@@ -12,7 +13,7 @@ from django.contrib.auth import authenticate
 
 class UserToken(Authentication,APIView):
 
-    def get(self,request,*args,**kwargs):
+    def post(self,request,*args,**kwargs):
         print(self.user)
         #username = request.GET.get('username')
         #print(username)
@@ -75,7 +76,8 @@ class Login(ObtainAuthToken):
         #return Response({'mensaje':'Hola desde response'}, status = status.HTTP_200_OK)
 
 
-class Logout(APIView):
+class Logout(Authentication,APIView):
+    '''
     def get(self,request,*args,**kwargs):
         try:
             token = request.GET.get('token')
@@ -96,6 +98,30 @@ class Logout(APIView):
                 return Response({'error':'No se ha encontrado un usuario con estas credenciales'},status = status.HTTP_400_BAD_REQUEST)
         except:
             return Response({'error':'No se ha encontrado token en la peticion'},status = status.HTTP_409_CONFLICT)
-        
-        
+    '''
 
+        
+    def post(self,request):
+        print(self.user)
+        #username = request.GET.get('username')
+        #print(username)
+        try:
+            user_token,create = Token.objects.get_or_create(user = self.user)
+            user = UserTokenSerializer(self.user)
+            if user_token:
+                user = user_token.user
+                all_sessions = Session.objects.filter(expire_date__gte = datetime.now())
+                if all_sessions.exists():
+                    for session in all_sessions:
+                        session_data = session.get_decoded()
+                        if user.id == int(session_data.get('_auth_user_id')):
+                            session.delete()
+                user_token.delete()            
+                session_message = 'Sesiones de usuario eliminadas.'
+                token_message = 'Token Eliminado'
+                return Response({'token_message':token_message,'session_message':session_message},status = status.HTTP_200_OK)   
+            else:
+                return Response({'error':'No se ha encontrado un usuario con estas credenciales'},status = status.HTTP_400_BAD_REQUEST)
+
+        except:
+            return Response({'error':'Usuario no logeado'},status = status.HTTP_409_CONFLICT)

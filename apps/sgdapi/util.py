@@ -33,20 +33,21 @@ class DocumentoOCR():
         self.PDF_file = ruta
     #config('POPPLER_PATH_WINDOWS')
     def obtenerTexto(self):
-        doc = self.PDF_file[6:]
-        absURl = settings.MEDIA_ROOT.replace("\\","/")+'/files'  + doc
-        print('obteniendo texto de ' + absURl.replace("\\","/"))
-        pages = convert_from_path(absURl.replace("\\","/"), 500, poppler_path=config('POPPLER_PATH_WINDOWS'))#r'C:\Program Files\poppler-0.68.0\bin'
+        doc = self.PDF_file
+        print('Documento : ' + doc)
+        absURl = settings.MEDIA_ROOT.replace("\\","/")+'files'  + doc
+        print('obteniendo texto de ' + absURl)
+        pages = convert_from_path(absURl, 500, poppler_path=config('POPPLER_PATH_WINDOWS'))#r'C:\Program Files\poppler-0.68.0\bin'
         image_counter = 1
         for page in pages:
             filename = "page_"+str(image_counter)+".jpg"
-            page.save(filename, 'JPEG')
+            page.save(settings.MEDIA_ROOT.replace("\\","/")+'test/'+filename, 'JPEG')
             image_counter = image_counter + 1
         filelimit = image_counter-1
         textGenerado = ""
         for i in range(1, filelimit + 1):
             filename = "page_"+str(i)+".jpg"
-            text = str(((pytesseract.image_to_string(Image.open(filename)))))
+            text = str(((pytesseract.image_to_string(Image.open(settings.MEDIA_ROOT.replace("\\","/")+'test/'+filename)))))
             text = text.replace('-\n', '')    
             textGenerado += text
         return textGenerado

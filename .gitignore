@@ -24,6 +24,7 @@ media
 *.so
 
 # Distribution / packaging
+sgdfip_rest/static/tmp
 .Python
 build/
 develop-eggs/
