@@ -1,7 +1,3 @@
-
-
-
-
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import generics
@@ -18,7 +14,7 @@ from rest_framework import viewsets
 from django.http import FileResponse
 
 from django.utils.decorators import method_decorator
-
+import json
 def extraerExtencion(Archivo):
     extension = [["jpg","application/jpeg"],["png","application/png"],["xlsx","application/vnd.ms-excel"],["docx","application/msword"],["pptx","application/vnd.ms-powerpoint"],["pdf","application/pdf"]]
     ext,aplication = None,None
@@ -27,7 +23,6 @@ def extraerExtencion(Archivo):
             ext = e[0]
             aplication =e[1]
     return ext,aplication 
-
 
 class DocumentoObtenerViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = DocumentoObtenerSerializer
@@ -43,19 +38,19 @@ class DocumentoObtenerViewSet(Authentication,viewsets.GenericViewSet):
             documento = DocumentoSerializer().Meta.model.objects.filter(id=pk).first()
             if documento:
                 print(documento.documento_file)
-                doc = str(documento.documento_file)[34:]#56 en linux
-                file_location =  settings.MEDIA_ROOT.replace("\\","/") + 'files/' + doc 
+                doc = str(documento.documento_file)#56 en linux / 34 windows
+                file_location =  settings.MEDIA_ROOT + 'files/' + doc 
                 print('Obteniendo file de ' + file_location)
                 try:    
                     #with open(file_location, 'r') as f:
                     #    file_data = f.read()
                     file_data = open(file_location, 'rb')
                     # sending response 
-                    ext,app = extraerExtencion(str(documento.documento_file)[34:])#56 en linux
+                    ext,app = extraerExtencion(str(documento.documento_file))#56 en linux/ 34 windows
                     response = FileResponse(file_data, content_type=app)
                 
                     #response['Content-Length'] = file_data.size
-                    response['Content-Disposition'] = 'attachment; filename="'+str(documento.documento_file)[34:]+'"'#56 en linux
+                    response['Content-Disposition'] = 'attachment; filename="'+str(documento.documento_file)+'"'#56 en linux/ 34 windows
                 except:
                     # handle file not exist case here
                     response = Response({'error':'Hubo un error al obtener el archivo'},status = status.HTTP_400_BAD_REQUEST)
@@ -83,9 +78,9 @@ class DocumentoViewSet(Authentication,viewsets.GenericViewSet):
             
 
             print(fileurl)
-            doc = fileurl[7:]
-            absURl = 'http://'+current_site+'/media/files/'+ doc
-            documento_serializer.validated_data['documento_file'] = absURl
+            doc = fileurl[1:]
+            #absURl = 'http://'+current_site+'/media/files/'+ doc
+            documento_serializer.validated_data['documento_file'] = doc
             
             
             documentoRenderisado = DocumentoOCR(fileurl)

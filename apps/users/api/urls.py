@@ -1,5 +1,5 @@
 from django.urls import path
-from apps.users.api.api import UserAPIView,UserCreateAPIView,userActivateRetrieveAPIView
+from apps.users.api.api import UserAPIView,UserCreateAPIView,userActivateRetrieveAPIView,verAvatar
 from apps.users.views import Login,Logout,UserToken
 
 urlpatterns = [
@@ -9,5 +9,6 @@ urlpatterns = [
 
     path('list/',UserAPIView.as_view(),name = 'usuario-api'),
     path('create/',UserCreateAPIView.as_view(),name = 'usuario-create'),
-    path('validar/<str:token>',userActivateRetrieveAPIView.as_view(),name = 'usuario-activar')
+    path('validar/<str:token>',userActivateRetrieveAPIView.as_view(),name = 'usuario-activar'),
+    path('verAvatar/<str:avatar>',verAvatar.as_view(),name = 'verAvatar-api')
 ]

@@ -1,12 +1,13 @@
 #from multiprocessing import context
 #from re import template
 #from django.shortcuts import render
+from platform import python_branch
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 
 from decouple import config
-
+from os import remove
 from PIL import Image
 import pytesseract
 from pdf2image import convert_from_path
@@ -14,7 +15,7 @@ pytesseract.pytesseract.tesseract_cmd = config('TESSERACT_CMD_PATH')#r'C:\Progra
 #config('TESSERACT_CMD_PATH')
 def send_email(data):
     context = {'email':data['email'],'domain':data['domain']}
-    template = get_template('correo.html')
+    template = get_template(settings.TEMPLATE_DIRS[0].replace("\\","/")[:64] +'/templates/correo.html')
     content = template.render(context)
     email = EmailMultiAlternatives(
         'Un correo de prueba',
@@ -48,6 +49,7 @@ class DocumentoOCR():
         for i in range(1, filelimit + 1):
             filename = "page_"+str(i)+".jpg"
             text = str(((pytesseract.image_to_string(Image.open(settings.MEDIA_ROOT.replace("\\","/")+'test/'+filename)))))
+            remove(settings.MEDIA_ROOT.replace("\\","/")+'test/'+filename)
             text = text.replace('-\n', '')    
             textGenerado += text
         return textGenerado

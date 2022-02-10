@@ -14,7 +14,34 @@ from django.utils.crypto import get_random_string
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
+from django.http import FileResponse
+from apps.users.authenticacion_mixings import Authentication
 
+class verAvatar(Authentication,APIView):
+    
+    def get(self,request,avatar=None):
+        print(avatar)
+        usuario = User.objects.filter(avatar = avatar ).first()
+        if usuario:
+            pic = usuario.avatar#56 en linux / 34 windows
+            file_location =  settings.MEDIA_ROOT +"avatars/"+pic.name 
+            file_location = file_location.replace("\\","/")
+            
+            print('Obteniendo foto de ' + file_location)
+            try:    
+                #with open(file_location, 'r') as f:
+                #    file_data = f.read()
+                file_data = open(file_location, 'rb')
+                # sending response 
+                response = FileResponse(file_data, content_type='image/jpeg')
+
+                
+                response['Content-Disposition'] = 'inline'#56 en linux/ 34 windows
+            except:
+                # handle file not exist case here
+                response = Response({'error':'Hubo un error al obtener la foto'},status = status.HTTP_400_BAD_REQUEST)
+            return response
+        return Response({'error':'No existe la foto solicitada'},status = status.HTTP_400_BAD_REQUEST)
 
 class UserAPIView(APIView):
     def get(self,request):
@@ -27,14 +54,13 @@ class UserCreateAPIView(generics.CreateAPIView):
         serializer = self.serializer_class(data = request.data,context = request.data)
         if serializer.is_valid():
             current_site = get_current_site(request).domain
-            fs = FileSystemStorage(location='sgdfip_rest/media/avatars/')
+            fs = FileSystemStorage(location= settings.MEDIA_ROOT +'avatars/')
             file = fs.save(request.FILES['avatar'].name,request.FILES['avatar'])
             fileurl = fs.url(file)
             print(fileurl)
-            doc = fileurl[6:]
+            doc = fileurl[1:]
             #absURl = 'http://'+current_site+'/media/avatars'+ doc
-            absURl = '/avatars'+ doc
-            serializer.validated_data['avatar'] = absURl
+            #absURl = 'avatars/'+ doc
             user = serializer.save()
 
             datos = {'correo':user.correo,

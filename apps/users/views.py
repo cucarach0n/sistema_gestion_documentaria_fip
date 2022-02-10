@@ -44,6 +44,7 @@ class Login(ObtainAuthToken):
                 print('usuario autenticado')
                 token,created = Token.objects.get_or_create(user = user)
                 user_serializer = UserTokenSerializer(user)
+                user_serializer.data['avatar'] = 'asdasd'
                 print(user.avatar)
                 if created:
                     return Response({
@@ -70,7 +71,7 @@ class Login(ObtainAuthToken):
                     #return Response({'error':'Ya se ha iniciado sesion con este usuario'},status = status.HTTP_409_CONFLICT)
                 return Response({'error':'error en validar avatar'},status = status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'error':'Este usuario no puede iniciar sesion'},status = status.HTTP_401_UNAUTHORIZED)
+                return Response({'error':'Este usuario no puede iniciar sesion, deve activar su cuenta primero'},status = status.HTTP_401_UNAUTHORIZED)
         else:
             return Response({'error':'Datos del usuario invalidos'},status = status.HTTP_400_BAD_REQUEST)
         #return Response({'mensaje':'Hola desde response'}, status = status.HTTP_200_OK)

@@ -6,4 +6,5 @@ router = DefaultRouter()
 router.register(r'documento',DocumentoViewSet, basename = 'Documento-view')
 router.register(r'documentos',DocumentoListAPIView, basename =  'Documentos-view')
 router.register(r'ver',DocumentoObtenerViewSet, basename =  'DocumentoObtener-view')
+
 urlpatterns = router.urls

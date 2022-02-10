@@ -11,4 +11,3 @@ class DocumentoObtenerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Documento
         exclude = ('fechaSubida','extension','documento_file','nombreDocumento',)
-
