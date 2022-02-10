@@ -6,4 +6,9 @@ class DocumentoCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Documento
         exclude = ('fechaSubida','extension',)
-    
+
+class DocumentoObtenerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Documento
+        exclude = ('fechaSubida','extension','documento_file','nombreDocumento',)
+
