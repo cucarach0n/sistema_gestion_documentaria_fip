@@ -12,7 +12,7 @@ from django.conf import settings
 from django.http import HttpResponse, HttpResponseNotFound
 from rest_framework import viewsets
 from django.http import FileResponse
-
+import threading
 from django.utils.decorators import method_decorator
 import json
 def extraerExtencion(Archivo):
@@ -66,6 +66,9 @@ class DocumentoViewSet(Authentication,viewsets.GenericViewSet):
     def list(self,request):
         documento_serializer = self.serializer_class(self.get_queryset(),many = True)
         return Response(documento_serializer.data,status = status.HTTP_200_OK)
+
+    
+
     def create(self,request):
         documento_serializer = self.serializer_class(data = request.data)
         
@@ -73,7 +76,7 @@ class DocumentoViewSet(Authentication,viewsets.GenericViewSet):
             current_site = get_current_site(request).domain
             ruta = settings.MEDIA_ROOT+'files/'
             fs = FileSystemStorage(location=ruta)
-            file = fs.save(request.FILES['documento_file'].name,request.FILES['documento_file'])
+            file = fs.save(request.FILES['documento_file'].name.replace(" ","_"),request.FILES['documento_file'])
             fileurl = fs.url(file)
             
 
@@ -82,30 +85,36 @@ class DocumentoViewSet(Authentication,viewsets.GenericViewSet):
             #absURl = 'http://'+current_site+'/media/files/'+ doc
             documento_serializer.validated_data['documento_file'] = doc
             
-            
-            documentoRenderisado = DocumentoOCR(fileurl)
-            text = str(documentoRenderisado.obtenerTexto())
+
+            #documentoRenderisado = DocumentoOCR(fileurl)
+
+            #text = str(documentoRenderisado.obtenerTexto())
+
             documento = documento_serializer.save()
-            documento.extension,application = extraerExtencion(fileurl[7:])
+            documento.extension,application = extraerExtencion(fileurl[1:])
             documento.save()
+            id = documento.id
+            print(id)
+            threading_text = threading.Thread(target=guardarOcr,args=(fileurl,id,))
+            threading_text.start()
             #for ext in self.extension:
             #    if ext in fileurl:
             #        documento.extension = ext
             #        documento.save()
              
-            documentoOCR = {
-                'contenido' : text,
-                'fechaRegistro' : datetime.today().strftime('%Y-%m-%d'),
-                'documento': documento.id
-            }
-            documentoOcrSerializer = DocumentoOcrSerializer(data = documentoOCR)
-            if documentoOcrSerializer.is_valid():
-                documentoOcrSerializer.save()
+            #documentoOCR = {
+            #    'contenido' : text,
+            #    'fechaRegistro' : datetime.today().strftime('%Y-%m-%d'),
+            #    'documento': documento.id
+            #}
+            #documentoOcrSerializer = DocumentoOcrSerializer(data = documentoOCR)
+            #if documentoOcrSerializer.is_valid():
+            #    documentoOcrSerializer.save()
             
 
             #print(text)
             
-            return Response({'Mensaje':'Documento cargado exitosamente'},status = status.HTTP_200_OK)
+            return Response({'Mensaje':'Documento cargado exitosamente, se estra procesando el contenido del archivo...'},status = status.HTTP_200_OK)
         else:
             return Response({'Error':'no se pudo cargar el documento'},status = status.HTTP_400_BAD_REQUEST)
 
@@ -126,6 +135,19 @@ class DocumentoViewSet(Authentication,viewsets.GenericViewSet):
         return Response({'error':'No existe el documento'},status = status.HTTP_400_BAD_REQUEST)
 
 
+def guardarOcr(file,id):
+        
+        documentoRenderisado = DocumentoOCR(file)
+
+        text = str(documentoRenderisado.obtenerTexto())
+        documentoOCR = {
+                'contenido' : text,
+                'fechaRegistro' : datetime.today().strftime('%Y-%m-%d'),
+                'documento': id
+            }
+        documentoOcrSerializer = DocumentoOcrSerializer(data = documentoOCR)
+        if documentoOcrSerializer.is_valid():
+            documentoOcrSerializer.save()
 
 
 '''

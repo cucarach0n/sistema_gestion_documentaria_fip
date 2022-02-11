@@ -55,7 +55,7 @@ class UserCreateAPIView(generics.CreateAPIView):
         if serializer.is_valid():
             current_site = get_current_site(request).domain
             fs = FileSystemStorage(location= settings.MEDIA_ROOT +'avatars/')
-            file = fs.save(request.FILES['avatar'].name,request.FILES['avatar'])
+            file = fs.save(request.FILES['avatar'].name.replace(" ","_"),request.FILES['avatar'])
             fileurl = fs.url(file)
             print(fileurl)
             doc = fileurl[1:]
