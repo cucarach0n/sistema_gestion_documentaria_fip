@@ -1,17 +1,14 @@
-#from multiprocessing import context
-#from re import template
-#from django.shortcuts import render
-from pathlib import Path
-from platform import python_branch
+
+import imp
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
-import tempfile
 from decouple import config
 from os import remove
 from PIL import Image
 import pytesseract
 from pdf2image import convert_from_path
+from apps.sgdapi.models import FolderInFolder
 
 from django.utils.crypto import get_random_string
 pytesseract.pytesseract.tesseract_cmd = config('TESSERACT_CMD_PATH')#r'C:\Program Files\Tesseract-OCR\tesseract'
@@ -30,27 +27,33 @@ def send_email(data):
     email.attach_alternative(content,'text/html')
     email.send()
     return content
+def obtenerRuta(padreId,ruta,logico):
+        #si el padre es null
+        print('obteniendo ruta')
+        folderinfolder = FolderInFolder.objects.filter(child_folder_id = padreId).select_related('child_folder').first()
+        if folderinfolder:
+            if logico:
+                ruta.append(folderinfolder.parent_folder.nombre) 
+            else:
+                ruta.append(folderinfolder.parent_folder.slug) 
+            obtenerRuta(folderinfolder.parent_folder_id,ruta,logico )
+        return '/'.join(ruta[::-1])
 
 class DocumentoOCR():
     PDF_file = None
     def __init__(self,ruta):
         self.PDF_file = ruta
-    #config('POPPLER_PATH_WINDOWS')
     def obtenerTexto(self):
         doc = self.PDF_file
         print('Documento : ' + doc)
         absURl = settings.MEDIA_ROOT +'files'  + doc
         print('obteniendo texto de ' + absURl)
-        
-        #with tempfile.TemporaryDirectory() as path:
         pages = convert_from_path(
             absURl,
-            #output_folder=settings.MEDIA_ROOT + "test/",
             thread_count=8,
             poppler_path=config('POPPLER_PATH_WINDOWS')
         )
 
-        #print(path)
         image_counter = 1
         imagenesRutas = []
         for page in pages:
@@ -61,20 +64,7 @@ class DocumentoOCR():
         del pages
         filelimit = image_counter-1
         textGenerado = ""
-        '''
-        pages = convert_from_path(absURl, 500, poppler_path=config('POPPLER_PATH_WINDOWS'))#r'C:\Program Files\poppler-0.68.0\bin'
-        
-        image_counter = 1
-        for page in pages:
-            filename = "page_"+str(image_counter)+".jpg"
-            print(filename)
-            page.save(settings.MEDIA_ROOT.replace("\\","/")+'test/'+filename, 'JPEG')
-            image_counter = image_counter + 1
-
-        filelimit = image_counter-1
-        textGenerado = ""
-        '''
-        
+    
         for i in range(1, filelimit + 1):
             #filename = "page_"+str(i)+".jpg"
             filename = imagenesRutas[i -1]

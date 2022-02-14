@@ -6,54 +6,35 @@ class Contrasena_reinicioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contrasena_reinicio
         fields = '__all__'
-class UsuarioSerializer(serializers.ModelSerializer):
+
+class Tag_Serializer(serializers.ModelSerializer):
     class Meta:
-        model = Usuario
-        fields = '__all__'
-class TipoGestionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TipoGestion
+        model = Tag
         fields = '__all__'
 
-class Tipo_carpetaSerializer(serializers.ModelSerializer):
+class Folder_Serializer(serializers.ModelSerializer):
     class Meta:
-        model = Tipo_carpeta
+        model = Folder
         fields = '__all__'
-
-class SubCarpetaSerializer(serializers.ModelSerializer):
+class FolderInFolder_Serializer(serializers.ModelSerializer):
     class Meta:
-        model = SubCarpeta
+        model = FolderInFolder
         fields = '__all__'
-
-class UnidadDocumentoSerializer(serializers.ModelSerializer):
+class File_Serializer(serializers.ModelSerializer):
     class Meta:
-        model = UnidadDocumento
+        model = File
         fields = '__all__'
-
-class AreaDocumentoSerializer(serializers.ModelSerializer):
+class UnidadArea_Serializer(serializers.ModelSerializer):
     class Meta:
-        model = AreaDocumento
+        model = UnidadArea
         fields = '__all__'
-
-class CarpetaSerializer(serializers.ModelSerializer):
+class FileInFolder_Serializer(serializers.ModelSerializer):
     class Meta:
-        model = Carpeta
+        model = FileInFolder
         fields = '__all__'
-
-class PropiedadDocumentoSerializer(serializers.ModelSerializer):
+class FileTag_Serializer(serializers.ModelSerializer):
     class Meta:
-        model = PropiedadDocumento
+        model = FileTag
         fields = '__all__'
-
-class DocumentoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Documento
-        fields = '__all__'
-
-class DocumentoOcrSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DocumentoOcr
-        fields = '__all__'
-
 
 

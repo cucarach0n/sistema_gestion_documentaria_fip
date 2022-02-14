@@ -61,6 +61,7 @@ class UserCreateAPIView(generics.CreateAPIView):
             doc = fileurl[1:]
             #absURl = 'http://'+current_site+'/media/avatars'+ doc
             #absURl = 'avatars/'+ doc
+            serializer.validated_data['avatar'] = doc
             user = serializer.save()
 
             datos = {'correo':user.correo,

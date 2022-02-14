@@ -2,10 +2,10 @@ from rest_framework import viewsets
 from apps.users.authenticacion_mixings import Authentication
 from rest_framework.response import Response
 from rest_framework import status
-from apps.sgdapi.api.serializers.general_serializers import DocumentoSerializer
+from apps.sgdapi.api.serializers.general_serializers import File_Serializer
 
-class DocumentoListAPIView(Authentication,viewsets.GenericViewSet):
-    serializer_class = DocumentoSerializer
+class FileListAPIView(Authentication,viewsets.GenericViewSet):
+    serializer_class = File_Serializer
 
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.all()

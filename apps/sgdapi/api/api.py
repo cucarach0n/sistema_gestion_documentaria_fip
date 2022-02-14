@@ -22,6 +22,7 @@ class UsuarioAPIView(APIView):
         usuarios_serializer = UsuarioSerializer(usuarios,many = True)
         return Response(usuarios_serializer.data);
 '''
+'''
 @api_view(['GET','POST'])
 def usuario_api_view(request):
 
@@ -96,3 +97,4 @@ def usuario_validacion_api_view(request,token = None):
             return Response({'message':'Usuario validado correctamente'},status = status.HTTP_200_OK)
         else:
             return Response({'message':'Error en la validacion'},status = status.HTTP_400_BAD_REQUEST)
+'''

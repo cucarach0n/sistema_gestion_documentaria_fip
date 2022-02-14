@@ -1,7 +1,7 @@
 from unittest.util import _MAX_LENGTH
 from rest_framework import serializers
 from apps.sgdapi.models import *
-
+'''
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
@@ -49,7 +49,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         usuario_actualisado.save()
         return usuario_actualisado
     
-    '''
+    
     def to_representation(self,instance):
         #data = super().to_representation(instance)
         #print(data)

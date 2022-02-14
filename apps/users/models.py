@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 from simple_history.models import HistoricalRecords
+from apps.sgdapi.models import UnidadArea
 
 
 class UserManager(BaseUserManager):
@@ -31,6 +32,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField('Apellidos', max_length = 255, blank = True, null = True)
     avatar = models.ImageField('Imagen de perfil', upload_to='avatars/', max_length=255, null=True, blank = True)
     estado = models.SmallIntegerField('Estado del usuario',null = True, default=0, blank = False)
+    #unidadArea = models.ForeignKey("UnidadArea",on_delete=models.CASCADE)
     is_active = models.BooleanField(default = False)
     is_staff = models.BooleanField(default = False)
     historical = HistoricalRecords()

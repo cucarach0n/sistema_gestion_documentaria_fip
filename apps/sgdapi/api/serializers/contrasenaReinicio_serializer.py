@@ -1,7 +1,8 @@
+from msilib.schema import File
 from rest_framework import serializers
-from apps.sgdapi.models import Documento
+from apps.sgdapi.models import File
 
 class ContrasenaReinicioActivateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Documento
+        model = File
         exclude = ('id',)
