@@ -4,7 +4,7 @@ from apps.users.models import User
 class UserTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['nombreUsuario','correo','name','last_name','avatar']
+        fields = ['correo','name','last_name','avatar']
     def validate_avatar(self,value):
         return value
     def validate(self,data):
@@ -24,10 +24,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         if 'uni.pe' not in value:
             raise serializers.ValidationError('Error, el correo no es valido para esta institucion')
         return value
-    def validate_password(self,value):
-        if self.context['nombreUsuario'] == value:
-            raise serializers.ValidationError('La contrasena no puede ser igual al nombre de usuario')
-        return value
+
     def validate(self,data):
         #if data['nombreUsuario'] in data['contrasena']:
         #    raise serializers.ValidationError('El nombre de usuario no puede ser igual a la contrasena')

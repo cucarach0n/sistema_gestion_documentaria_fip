@@ -70,11 +70,9 @@ class UserCreateAPIView(generics.CreateAPIView):
                     'estado':1,
                     'usuario':user.id
                     }
-            print(datos)
             contrasena_reinicioO = Contrasena_reinicioSerializer(data = datos)
             
             if contrasena_reinicioO.is_valid():
-                print('endiando correo...')
                 userSendEmail = contrasena_reinicioO.save()
                 
                 absurl = 'https://'+current_site+'/usuario/validar/'+userSendEmail.token
