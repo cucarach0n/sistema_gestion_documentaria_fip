@@ -40,10 +40,13 @@ BASE_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
-
+#'apps.sgdapi',
 LOCAL_APPS =[
-    'apps.users',
-    'apps.sgdapi'
+    'apps.base',
+    'apps.folder',
+    'apps.tag',
+    'apps.file',
+    'apps.users'
 ]
 
 THIRD_APPS = [

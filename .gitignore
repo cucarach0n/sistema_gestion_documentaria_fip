@@ -24,6 +24,7 @@ media
 *.so
 
 # Distribution / packaging
+migrations
 sgdfip_rest/static/tmp
 .Python
 build/

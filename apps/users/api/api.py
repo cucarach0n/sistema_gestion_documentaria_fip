@@ -1,14 +1,14 @@
-from multiprocessing import context
-from apps.sgdapi.models import Contrasena_reinicio
+from apps.users.models import Contrasena_reinicio
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from apps.users.models import User
-from apps.users.api.serializers import UserSerializer,UserCreateSerializer
-from apps.sgdapi.api.serializers.contrasenaReinicio_serializer import ContrasenaReinicioActivateSerializer
+from apps.users.api.serializers.user_serializers import UserSerializer,UserCreateSerializer
+from apps.users.api.serializers.general_serializers import Contrasena_reinicioSerializer
+from apps.users.api.serializers.contrasenaReinicio_serializer import ContrasenaReinicioActivateSerializer
 from rest_framework import status
 from rest_framework import generics
-from apps.sgdapi.api.serializers.general_serializers import Contrasena_reinicioSerializer
-from apps.sgdapi.util import send_email
+
+from apps.base.util import send_email
 from datetime import datetime
 from django.utils.crypto import get_random_string
 from django.contrib.sites.shortcuts import get_current_site
@@ -67,9 +67,14 @@ class UserCreateAPIView(generics.CreateAPIView):
             datos = {'correo':user.correo,
                     'token':get_random_string(length=40),
                     'fechaCambio':datetime.today().strftime('%Y-%m-%d'),
-                    'estado':1}
+                    'estado':1,
+                    'usuario':user.id
+                    }
+            print(datos)
             contrasena_reinicioO = Contrasena_reinicioSerializer(data = datos)
+            
             if contrasena_reinicioO.is_valid():
+                print('endiando correo...')
                 userSendEmail = contrasena_reinicioO.save()
                 
                 absurl = 'https://'+current_site+'/usuario/validar/'+userSendEmail.token

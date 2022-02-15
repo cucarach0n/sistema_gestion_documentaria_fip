@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 from simple_history.models import HistoricalRecords
-from apps.sgdapi.models import UnidadArea
+#from apps.sgdapi.models import UnidadArea
 
 
 class UserManager(BaseUserManager):
@@ -47,3 +47,27 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f'{self.correo} {self.nombreUsuario}'
+
+
+class Contrasena_reinicio(models.Model):
+    id = models.AutoField(primary_key = True)
+    correo = models.EmailField('Correo usuario',max_length=255,null = False, blank = False, unique=True)
+    token = models.CharField('token validador',max_length=40,null = False, blank = False, unique=True)
+    fechaCambio = models.DateTimeField('Fecha de Cambio',auto_now = False,auto_now_add = True) 
+    estado = models.SmallIntegerField('Estado del token',null = True, default=1, blank = False)
+    usuario = models.ForeignKey("User", on_delete=models.CASCADE)
+    historical = HistoricalRecords()
+
+    @property
+    def _history_user(self):
+        return self.changed_by
+    @_history_user.setter
+    def _history_user(self,value):
+        self.changed_by = value
+
+    class Meta():
+        verbose_name = 'Contrasena_reinicio'
+        verbose_name_plural = 'Contrasenas_reinicios'
+    
+    def __str__(self):
+        return "{0},{1}".format(self.correo,self.fechaCambio)

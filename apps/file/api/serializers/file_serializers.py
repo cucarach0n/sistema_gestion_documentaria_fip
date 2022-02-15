@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.sgdapi.models import File, Folder
+from apps.file.models import File, Folder
 import os
 from django.conf import settings
 from apps.base.util import obtenerRuta

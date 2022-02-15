@@ -7,19 +7,19 @@ class Contrasena_reinicioSerializer(serializers.ModelSerializer):
         model = Contrasena_reinicio
         fields = '__all__'
 
-class Tag_Serializer(serializers.ModelSerializer):
+'''class Tag_Serializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = '__all__'
+        fields = '__all__'''
 
-class Folder_Serializer(serializers.ModelSerializer):
+'''class Folder_Serializer(serializers.ModelSerializer):
     class Meta:
         model = Folder
         fields = '__all__'
 class FolderInFolder_Serializer(serializers.ModelSerializer):
     class Meta:
         model = FolderInFolder
-        fields = '__all__'
+        fields = '__all__'''
 class File_Serializer(serializers.ModelSerializer):
     class Meta:
         model = File

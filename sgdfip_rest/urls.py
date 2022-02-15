@@ -44,7 +44,9 @@ urlpatterns = [
 
     path('admin/', admin.site.urls),
     path('usuario/', include('apps.users.api.urls')),
-    path('sgdapi/', include('apps.sgdapi.api.routers')),
+    #path('sgdapi/', include('apps.sgdapi.api.routers')),
+    path('file/', include('apps.file.api.routers')),
+    path('folder/', include('apps.folder.api.routers')),
 ] #+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

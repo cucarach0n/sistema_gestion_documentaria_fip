@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from apps.users.authenticacion_mixings import Authentication
-from apps.users.api.serializers import UserTokenSerializer
+from apps.users.api.serializers.user_serializers import UserTokenSerializer
 from django.contrib.auth import authenticate
 
 class UserToken(Authentication,APIView):
