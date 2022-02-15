@@ -72,7 +72,7 @@ class UserCreateAPIView(generics.CreateAPIView):
             if contrasena_reinicioO.is_valid():
                 userSendEmail = contrasena_reinicioO.save()
                 
-                absurl = 'http://'+current_site+'/usuario/validar/'+userSendEmail.token
+                absurl = 'https://'+current_site+'/usuario/validar/'+userSendEmail.token
                 send_email({'email':'devalo19@gmail.com','domain': str(absurl)})
 
             return Response({'Mensaje':'Se registro el usuario correctamente'},status = status.HTTP_200_OK)

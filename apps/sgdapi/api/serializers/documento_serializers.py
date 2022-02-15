@@ -3,6 +3,7 @@ from apps.sgdapi.models import File, Folder
 import os
 from django.conf import settings
 from apps.sgdapi.util import obtenerRuta
+from hurry.filesize import size, si
 
 class FileCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,7 +29,7 @@ class FileDetalleSerializer(serializers.ModelSerializer):
         model = File
         exclude = ('contenidoOCR',)
     def to_representation(self,instance):
-        size = os.path.getsize(settings.MEDIA_ROOT+'files/'+instance.documento_file.name)
+        fileSize = os.path.getsize(settings.MEDIA_ROOT+'files/'+instance.documento_file.name)
         folder = Folder.objects.filter(fileinfolder__file = instance).first()
         if folder:
             rutaLogica = obtenerRuta(folder.id,[folder.nombre],True)+"/"+instance.documento_file.name
@@ -41,13 +42,12 @@ class FileDetalleSerializer(serializers.ModelSerializer):
             'nombre':instance.nombreDocumento,
             'nombreArchivo':instance.documento_file.name,
             'slug':instance.slug,
-            'size':size,
+            'size':str(size(fileSize, system=si)),
             'extension':instance.extension,
             'rutaLogica': "/"+rutaLogica,
             'rutaSlug':"/"+ruta,
-            'url':"http://localhost:8000/documento/ver/"+instance.slug+"/",
+            'url':"https://localhost:8000/sgdapi/ver/"+instance.slug+"/",
         }
 
-    
 
     
