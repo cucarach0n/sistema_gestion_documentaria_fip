@@ -1,4 +1,3 @@
-from unittest.util import _MAX_LENGTH
 from apps.sgdapi.api.serializers.general_serializers import Folder_Serializer
 from rest_framework import serializers
 from apps.sgdapi.models import FolderInFolder,Folder

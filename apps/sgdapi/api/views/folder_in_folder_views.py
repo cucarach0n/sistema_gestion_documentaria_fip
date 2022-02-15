@@ -6,12 +6,11 @@ from rest_framework import status
 from apps.sgdapi.api.serializers.folder_in_folder_serializer import FolderInFolderValidateCreateSerializer
 from apps.sgdapi.api.serializers.general_serializers import FolderInFolder_Serializer
 from apps.sgdapi.models import Folder, FolderInFolder
-from apps.sgdapi.api.serializers.folder_serializer import FolderSerializer,FolderListSerializer
+from apps.sgdapi.api.serializers.folder_serializer import FolderListSerializer
 from apps.users.authenticacion_mixings import Authentication
 from django.conf import settings
 from rest_framework import viewsets
 from django.utils.crypto import get_random_string
-import os
 
 def obtenerRutaAbsoluta(padreId,ruta):
         #si el padre es null

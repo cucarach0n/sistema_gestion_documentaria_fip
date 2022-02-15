@@ -1,7 +1,5 @@
-from dataclasses import field
-from unittest.util import _MAX_LENGTH
 from rest_framework import serializers
-from apps.sgdapi.models import File, FileInFolder, Folder
+from apps.sgdapi.models import File, Folder
 import os
 from django.conf import settings
 from apps.sgdapi.util import obtenerRuta
@@ -31,10 +29,14 @@ class FileDetalleSerializer(serializers.ModelSerializer):
         exclude = ('contenidoOCR',)
     def to_representation(self,instance):
         size = os.path.getsize(settings.MEDIA_ROOT+'files/'+instance.documento_file.name)
-        folder = Folder.objects.filter(id = self.context['padre']).first()
-        rutaLogica = obtenerRuta(folder.id,[folder.nombre],True)+"/"+instance.documento_file.name
-        ruta = obtenerRuta(folder.id,[folder.slug],False)+"/"+instance.slug
-        print(ruta)
+        folder = Folder.objects.filter(fileinfolder__file = instance).first()
+        if folder:
+            rutaLogica = obtenerRuta(folder.id,[folder.nombre],True)+"/"+instance.documento_file.name
+            ruta = obtenerRuta(folder.id,[folder.slug],False)+"/"+instance.slug
+        else:
+            rutaLogica = "#"
+            ruta = "#"
+            instance.slug = "#"
         return{
             'nombre':instance.nombreDocumento,
             'nombreArchivo':instance.documento_file.name,
@@ -45,3 +47,7 @@ class FileDetalleSerializer(serializers.ModelSerializer):
             'rutaSlug':"/"+ruta,
             'url':"http://localhost:8000/documento/ver/"+instance.slug+"/",
         }
+
+    
+
+    

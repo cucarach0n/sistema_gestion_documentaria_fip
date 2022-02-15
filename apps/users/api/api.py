@@ -93,7 +93,7 @@ class userActivateRetrieveAPIView(APIView):
                 user.estado = 1
                 user.is_active = True
                 Contrasena_reinicioUpdate.save()
-                user.save();
+                user.save()
                 return Response({'Mensaje':'Usuario validado correctamente'},status = status.HTTP_200_OK)
                 
             else:

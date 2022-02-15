@@ -1,18 +1,14 @@
-from multiprocessing import context
 from apps.sgdapi.models import Folder
 from rest_framework.response import Response
 from rest_framework import status
 from apps.sgdapi.api.serializers.documento_serializers import FileCreateSerializer,FileObtenerSerializer,FileFolderCreateSerializer,FileDetalleSerializer
 from apps.sgdapi.api.serializers.general_serializers import File_Serializer,FileInFolder_Serializer
-from datetime import datetime
-from apps.sgdapi.util import DocumentoOCR
 from apps.users.authenticacion_mixings import Authentication
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from rest_framework import viewsets
 from django.http import FileResponse
-import threading
 
 import PyPDF2
 import pdfplumber
@@ -70,7 +66,7 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
             return FileCreateSerializer().Meta.model.objects.all()
         return FileCreateSerializer().Meta.model.objects.filter(slug=pk).first()
     def list(self,request):
-        documento_serializer = FileDetalleSerializer(self.get_queryset(),many = True,context={'padre':None})
+        documento_serializer = FileDetalleSerializer(self.get_queryset(),many = True)
         return Response(documento_serializer.data,status = status.HTTP_200_OK)
 
     
@@ -104,16 +100,15 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
                 fileinfoler_serializer.save()
             #threading_text = threading.Thread(target=guardarOcr,args=(fileurl,id,))
             #threading_text.start()
-            print('Cantidad de threading : ',threading.active_count())
+            #print('Cantidad de threading : ',threading.active_count())
             return Response({'Mensaje':'Documento cargado exitosamente, se estra procesando el contenido del archivo...'},status = status.HTTP_200_OK)
         else:
             return Response({'Error':'no se pudo cargar el documento'},status = status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self,request,pk=None):
-        documento = self.get_queryset(pk).first()
+        documento = FileDetalleSerializer(self.get_queryset(pk))
         if documento:
-            documento_serializer = FileDetalleSerializer(documento,context={'padre':documento.id})
-            return Response(documento_serializer.data,status=status.HTTP_200_OK)
+            return Response(documento.data,status=status.HTTP_200_OK)
         return Response({'error':'No existe el documento solicitado'})
     def update(self,request,pk=None):
         documento = self.get_queryset(pk)
@@ -141,7 +136,7 @@ def obtenerTextoPDF(file):
         return text
         #documentoRenderisado = DocumentoOCR(file)
         '''
-        pdfFileObj = open(settings.MEDIA_ROOT.replace("\\","/")+'files'+file,'rb')
+        pdfFileObj = open(settings.MEDIA_ROOT +'files'+file,'rb')
 
         pdfReader = PyPDF2.PdfFileReader(pdfFileObj,  strict = False)
         
