@@ -1,3 +1,4 @@
+from apps.unidadArea.models import UnidadArea
 from rest_framework import serializers
 from apps.file.models import File, Folder
 import os
@@ -13,9 +14,10 @@ class FileFolderCreateSerializer(serializers.Serializer):
     nombreDocumento = serializers.CharField(max_length=50)
     documento_file = serializers.FileField()
     directorioslug = serializers.CharField(max_length=6)
+    unidadareaid = serializers.CharField()
 
     def create(self,validated_data):
-        file = File(nombreDocumento = validated_data['nombreDocumento'],documento_file = validated_data['documento_file'])
+        file = File(nombreDocumento = validated_data['nombreDocumento'],documento_file = validated_data['documento_file'],unidadArea_id=validated_data['unidadareaid'])
         file.save()
         return file
 
@@ -23,6 +25,10 @@ class FileObtenerSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
         exclude = ('extension','documento_file','nombreDocumento','slug','contenidoOCR',)
+class FileUpdateOcrSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = File
+        exclude = ('extension','documento_file','nombreDocumento','slug',)
 
 class FileDetalleSerializer(serializers.ModelSerializer):
     class Meta:

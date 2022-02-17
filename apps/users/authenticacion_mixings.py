@@ -35,7 +35,7 @@ class Authentication(object):
         #se encontro un token en la peticion
         
         if user is not None:
-            print('Despachando peticion al usuario' + user.name)
+            print('Despachando peticion al usuario ' + user.name)
             '''
             if type(user) == str:
                 response = Response({'error':user,'expired':self.user_token_expire},status = status.HTTP_400_BAD_REQUEST)

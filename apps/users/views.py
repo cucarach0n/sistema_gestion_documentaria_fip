@@ -39,8 +39,8 @@ class Login(ObtainAuthToken):
             user = login_serializer.validated_data['user']
             if user.is_active:
                 user = authenticate(username=request.data['username'],password=request.data['password'])
-                if user is not None:
-                    print('"Usuario autenticado')
+                '''if user is not None:
+                    print('"Usuario autenticado')'''
                 print('usuario autenticado')
                 token,created = Token.objects.get_or_create(user = user)
                 user_serializer = UserTokenSerializer(user)

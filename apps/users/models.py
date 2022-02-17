@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 from simple_history.models import HistoricalRecords
-#from apps.sgdapi.models import UnidadArea
+from apps.unidadArea.models import UnidadArea
 
 
 class UserManager(BaseUserManager):
@@ -25,14 +25,15 @@ class UserManager(BaseUserManager):
         return self._create_user(correo, name,last_name, password, True, True, **extra_fields)
 
 class User(AbstractBaseUser, PermissionsMixin):
+
     #nombreUsuario = models.CharField('Usuario',max_length = 255, unique = True)
     correo = models.EmailField('Correo Electrónico',max_length = 255, unique = True,)
     name = models.CharField('Nombres', max_length = 255, blank = True, null = True)
     last_name = models.CharField('Apellidos', max_length = 255, blank = True, null = True)
     avatar = models.ImageField('Imagen de perfil', upload_to='avatars/', max_length=255, null=True, blank = True)
-    estado = models.SmallIntegerField('Estado del usuario',null = True, default=0, blank = False)
-    #unidadArea = models.ForeignKey("UnidadArea",on_delete=models.CASCADE)
-    is_active = models.BooleanField(default = False)
+    estado = models.SmallIntegerField('Estado del usuario',null = True, default=1, blank = False)
+    unidadArea = models.ForeignKey(UnidadArea, on_delete=models.SET_NULL,null =True,blank=True)
+    is_active = models.BooleanField(default = True)
     is_staff = models.BooleanField(default = False)
     historical = HistoricalRecords()
     objects = UserManager()

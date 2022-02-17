@@ -16,6 +16,7 @@ import pdfplumber
 from django.utils.crypto import get_random_string
 
 
+
 def extraerExtencion(Archivo):
     extension = [["jpg","application/jpeg"],["png","application/png"],["xlsx","application/vnd.ms-excel"],["docx","application/msword"],["pptx","application/vnd.ms-powerpoint"],["pdf","application/pdf"]]
     ext,aplication = None,None

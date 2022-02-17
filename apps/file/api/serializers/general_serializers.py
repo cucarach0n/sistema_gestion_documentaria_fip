@@ -5,10 +5,6 @@ class File_Serializer(serializers.ModelSerializer):
     class Meta:
         model = File
         fields = '__all__'
-class UnidadArea_Serializer(serializers.ModelSerializer):
-    class Meta:
-        model = UnidadArea
-        fields = '__all__'
 class FileInFolder_Serializer(serializers.ModelSerializer):
     class Meta:
         model = FileInFolder

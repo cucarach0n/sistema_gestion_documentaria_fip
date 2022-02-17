@@ -14,6 +14,5 @@ class Contrasena_reinicioAdmin(admin.ModelAdmin):
 #admin.site.register(Folder)
 #admin.site.register(FolderInFolder)
 admin.site.register(File)
-admin.site.register(UnidadArea)
 admin.site.register(FileInFolder)
 admin.site.register(FileTag)

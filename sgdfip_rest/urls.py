@@ -48,6 +48,7 @@ urlpatterns = [
     path('file/', include('apps.file.api.routers')),
     path('folder/', include('apps.folder.api.routers')),
     path('tag/', include('apps.tag.api.routers')),
+    path('unidadArea/', include('apps.unidadArea.api.routers')),
 ] #+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

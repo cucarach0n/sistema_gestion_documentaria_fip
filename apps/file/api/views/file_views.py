@@ -1,7 +1,8 @@
+from apps.file.models import File
 from apps.folder.models import Folder
 from rest_framework.response import Response
 from rest_framework import status
-from apps.file.api.serializers.file_serializers import FileCreateSerializer,FileObtenerSerializer,FileFolderCreateSerializer,FileDetalleSerializer
+from apps.file.api.serializers.file_serializers import FileCreateSerializer,FileObtenerSerializer,FileFolderCreateSerializer,FileDetalleSerializer,FileUpdateOcrSerializer
 from apps.file.api.serializers.general_serializers import File_Serializer,FileInFolder_Serializer
 from apps.users.authenticacion_mixings import Authentication
 from django.contrib.sites.shortcuts import get_current_site
@@ -9,13 +10,21 @@ from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from rest_framework import viewsets
 from django.http import FileResponse
-
+from apps.base.util import DocumentoOCR
+import threading
 import PyPDF2
-import pdfplumber
-
+#import pdfplumber
+#from apps.base.pdfConvertPdfMiner import extrarText
 from django.utils.crypto import get_random_string
+#import fitz
 
 
+def guardarOcr(file,id):
+    documentoRenderisado = DocumentoOCR(file)
+    text = str(documentoRenderisado.obtenerTexto())
+    file = FileUpdateOcrSerializer(File.objects.filter(id = id).first(),data = {'contenidoOCR':text})
+    if file.is_valid():
+        file.save()
 def extraerExtencion(Archivo):
     extension = [["jpg","application/jpeg"],["png","application/png"],["xlsx","application/vnd.ms-excel"],["docx","application/msword"],["pptx","application/vnd.ms-powerpoint"],["pdf","application/pdf"]]
     ext,aplication = None,None
@@ -38,10 +47,9 @@ class FileObtenerViewSet(Authentication,viewsets.GenericViewSet):
         if documento_query:
             documento = File_Serializer().Meta.model.objects.filter(slug=pk).first()
             if documento:
-                print(documento.documento_file)
+               
                 doc = str(documento.documento_file)#56 en linux / 34 windows
                 file_location =  settings.MEDIA_ROOT + 'files/' + doc 
-                print('Obteniendo file de ' + file_location)
                 try:    
                     #with open(file_location, 'r') as f:
                     #    file_data = f.read()
@@ -66,6 +74,8 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
             return FileCreateSerializer().Meta.model.objects.all()
         return FileCreateSerializer().Meta.model.objects.filter(slug=pk).first()
     def list(self,request):
+        print('test ')
+        print(self.user)
         documento_serializer = FileDetalleSerializer(self.get_queryset(),many = True)
         return Response(documento_serializer.data,status = status.HTTP_200_OK)
 
@@ -81,35 +91,48 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
             file = fs.save(request.FILES['documento_file'].name.replace(" ","_"),request.FILES['documento_file'])
             fileurl = fs.url(file)
 
-            
-
-            print(fileurl)
             doc = fileurl[1:]
             documento_serializer.validated_data['documento_file'] = doc
 
             documento = documento_serializer.save()
             documento.extension,application = extraerExtencion(fileurl[1:])
-            documento.contenidoOCR = obtenerTextoPDF(fileurl)
-            documento.slug = get_random_string(length=6)
-            documento.save()
-            fileinfoler_serializer = FileInFolder_Serializer(data = {
-                'file': documento.id,
-                'parent_folder':Folder.objects.filter(slug = request.data['directorioslug']).first().id
-            })
-            if fileinfoler_serializer.is_valid():
-                fileinfoler_serializer.save()
-            #threading_text = threading.Thread(target=guardarOcr,args=(fileurl,id,))
-            #threading_text.start()
-            #print('Cantidad de threading : ',threading.active_count())
-            return Response({'Mensaje':'Documento cargado exitosamente, se estra procesando el contenido del archivo...'},status = status.HTTP_200_OK)
-        else:
-            return Response({'Error':'no se pudo cargar el documento'},status = status.HTTP_400_BAD_REQUEST)
+            documento.slug = get_random_string(length=11)
+            try:
+                mensaje = "Documento cargado exitosamente"
+                #documentoOcr = DocumentoOCR(fileurl)
+                textPDF = obtenerTextoPDF(fileurl)
+                documento.contenidoOCR = textPDF #documentoOcr.obtenerTexto()
+                if textPDF == "":
+                    mensaje = 'Documento cargado exitosamente, se estra procesando el contenido del archivo...' 
+                    threading_text = threading.Thread(target=guardarOcr,args=(fileurl,documento.id,))
+                    threading_text.start()
+                    print('Cantidad de threading : ',threading.active_count())
+                documento.save()
+                parentID = Folder.objects.filter(slug = request.data['directorioslug']).first()
+                if parentID:
+                    fileinfoler_serializer = FileInFolder_Serializer(data = {
+                        'file': documento.id,
+                        'parent_folder':parentID#Folder.objects.filter(slug = request.data['directorioslug']).first().id
+                    })
+                    if fileinfoler_serializer.is_valid():
+                        fileinfoler_serializer.save()
 
+                    '''threading_text = threading.Thread(target=guardarOcr,args=(fileurl,documento.id,))
+                    threading_text.start()
+                    print('Cantidad de threading : ',threading.active_count())'''
+                    return Response({'Mensaje':mensaje},status = status.HTTP_200_OK)
+                return Response({'error':'La carpeta contenedora no existe'},status = status.HTTP_404_NOT_FOUND)          
+            except:
+                return Response({'error':'Se genero un error inesperado al convertir le contenido del file, no se pudo guardar'},status = status.HTTP_500_INTERNAL_SERVER_ERROR) 
+
+        else:
+            #return Response({'Error':'no se pudo cargar el documento'},status = status.HTTP_400_BAD_REQUEST)
+            return Response(documento_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
     def retrieve(self,request,pk=None):
         documento = FileDetalleSerializer(self.get_queryset(pk))
         if documento:
             return Response(documento.data,status=status.HTTP_200_OK)
-        return Response({'error':'No existe el documento solicitado'})
+        return Response({'error':'No existe el documento solicitado'},status = status.HTTP_404_NOT_FOUND)
     def update(self,request,pk=None):
         documento = self.get_queryset(pk)
         if documento:
@@ -123,9 +146,9 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
 
 def obtenerTextoPDF(file):
         text =""
-        '''
-        with pdfplumber.open(settings.MEDIA_ROOT+'files'+file) as pdf:
-            pdf.strict = False
+        
+        '''with pdfplumber.open(settings.MEDIA_ROOT+'files'+file) as pdf:
+            pdf.strict = True
             totalpages = len(pdf.pages)
             for x in range(0,totalpages):
                 first_page = pdf.pages[x]
@@ -133,24 +156,25 @@ def obtenerTextoPDF(file):
                 percent = ((x+1)*100)/totalpages
                 print(str(round(percent,2))+" %")
                 #print(first_page.extract_text().replace("",''))
-        return text
+        return text'''
         #documentoRenderisado = DocumentoOCR(file)
-        '''
+        
         pdfFileObj = open(settings.MEDIA_ROOT +'files'+file,'rb')
-
+        
         pdfReader = PyPDF2.PdfFileReader(pdfFileObj,  strict = False)
         
         print(pdfReader.isEncrypted)
         print(pdfReader.numPages)
-        if pdfReader.numPages is not None:
-            for x in range(0, pdfReader.numPages):
-                pageObj = pdfReader.getPage(x)
-                #print(pageObj.extractText())
-                text = text + str(pageObj.extractText())
-                percent = ((x+1)*100)/pdfReader.numPages
-                print(str(round(percent,2))+" %")
-        else:
-            text = pdfReader.getPage(0)
-        return text
+        #print(pdfReader.getPage(0).extractText())
+        for x in range(0, pdfReader.numPages):
+            pageObj = pdfReader.getPage(x)
+            #print(pageObj.extractText())
+            text = text + str(pageObj.extractText())
+            percent = ((x+1)*100)/pdfReader.numPages
+            print(str(round(percent,2))+" %")
+        return text 
+
+
+        '''text = extrarText(file)
+        return text'''
         #text = str(documentoRenderisado.obtenerTexto())
-        

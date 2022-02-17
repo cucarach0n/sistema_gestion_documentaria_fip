@@ -71,7 +71,7 @@ class FolderViewSet(viewsets.GenericViewSet):
         
         folder_serializer = self.serializer_class(data = request.data)
         if folder_serializer.is_valid():
-            folder_serializer.validated_data['slug'] = get_random_string(length=6)
+            folder_serializer.validated_data['slug'] = get_random_string(length=11)
             '''try:
                 os.makedirs(settings.MEDIA_ROOT + "files/"  + folder_serializer.validated_data['slug'] , exist_ok=True)
             except:

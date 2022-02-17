@@ -4,7 +4,7 @@ from simple_history.models import HistoricalRecords
 # Create your models here.
 class Folder(models.Model):
     id =models.AutoField(primary_key=True)
-    slug = models.CharField('Slug',unique=True,max_length=6,null=False,blank=False)
+    slug = models.CharField('Slug',unique=True,max_length=11,null=False,blank=False)
     nombre = models.CharField('Nombre del folder',max_length=45,null=False,blank=False)
     fechaCreacion = models.DateTimeField("Fecha de creacion",auto_now=True)
     fechaUpdate = models.DateTimeField("Fecha de actualizacion",auto_now_add=True)
