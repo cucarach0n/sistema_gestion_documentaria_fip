@@ -6,7 +6,7 @@ class FileTagSerializer(serializers.ModelSerializer):
         model = FileTag
         exclude = ('id','fechaRegistro','fechaUpdate',)
 class FileTagCreateSerializer(serializers.Serializer):
-    documentoSlug = serializers.CharField(max_length = 10)
+    documentoSlug = serializers.CharField(max_length = 11)
     tagId = serializers.CharField()
     
     def validate_documentoSlug(self,value):
@@ -21,7 +21,7 @@ class FileTagCreateSerializer(serializers.Serializer):
         return fileTag
 
 class FileTagDeleteSerializer(serializers.Serializer):
-    documentoSlug = serializers.CharField(max_length = 10)
+    documentoSlug = serializers.CharField(max_length = 11)
     tagId = serializers.CharField()
     
     def validate_documentoSlug(self,value):

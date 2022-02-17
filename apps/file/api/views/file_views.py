@@ -1,3 +1,4 @@
+from glob import escape
 from apps.file.models import File
 from apps.folder.models import Folder
 from rest_framework.response import Response
@@ -97,34 +98,32 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
             documento = documento_serializer.save()
             documento.extension,application = extraerExtencion(fileurl[1:])
             documento.slug = get_random_string(length=11)
-            try:
-                mensaje = "Documento cargado exitosamente"
-                #documentoOcr = DocumentoOCR(fileurl)
-                textPDF = obtenerTextoPDF(fileurl)
-                documento.contenidoOCR = textPDF #documentoOcr.obtenerTexto()
-                if textPDF == "":
-                    mensaje = 'Documento cargado exitosamente, se estra procesando el contenido del archivo...' 
-                    threading_text = threading.Thread(target=guardarOcr,args=(fileurl,documento.id,))
-                    threading_text.start()
-                    print('Cantidad de threading : ',threading.active_count())
-                documento.save()
-                parentID = Folder.objects.filter(slug = request.data['directorioslug']).first()
-                if parentID:
-                    fileinfoler_serializer = FileInFolder_Serializer(data = {
-                        'file': documento.id,
-                        'parent_folder':parentID#Folder.objects.filter(slug = request.data['directorioslug']).first().id
-                    })
-                    if fileinfoler_serializer.is_valid():
-                        fileinfoler_serializer.save()
 
-                    '''threading_text = threading.Thread(target=guardarOcr,args=(fileurl,documento.id,))
-                    threading_text.start()
-                    print('Cantidad de threading : ',threading.active_count())'''
-                    return Response({'Mensaje':mensaje},status = status.HTTP_200_OK)
-                return Response({'error':'La carpeta contenedora no existe'},status = status.HTTP_404_NOT_FOUND)          
-            except:
-                return Response({'error':'Se genero un error inesperado al convertir le contenido del file, no se pudo guardar'},status = status.HTTP_500_INTERNAL_SERVER_ERROR) 
+            mensaje = "Documento cargado exitosamente"
+            #documentoOcr = DocumentoOCR(fileurl)
+            textPDF = obtenerTextoPDF(fileurl)
+            documento.contenidoOCR = textPDF #documentoOcr.obtenerTexto()
+            if textPDF == "":
+                mensaje = 'Documento cargado exitosamente, se estra procesando el contenido del archivo...' 
+                threading_text = threading.Thread(target=guardarOcr,args=(fileurl,documento.id,))
+                threading_text.start()
+                print('Cantidad de threading : ',threading.active_count())
+            documento.save()
+            parentID = Folder.objects.filter(slug = request.data['directorioslug']).first()
+            if parentID:
 
+                fileinfoler_serializer = FileInFolder_Serializer(data = {
+                    'file': documento.id,
+                    'parent_folder':parentID.id#Folder.objects.filter(slug = request.data['directorioslug']).first().id
+                })
+                if fileinfoler_serializer.is_valid():
+                    fileinfoler_serializer.save()
+
+                '''threading_text = threading.Thread(target=guardarOcr,args=(fileurl,documento.id,))
+                threading_text.start()
+                print('Cantidad de threading : ',threading.active_count())'''
+                return Response({'Mensaje':mensaje},status = status.HTTP_200_OK)
+            return Response({'error':'La carpeta contenedora no existe'},status = status.HTTP_404_NOT_FOUND)          
         else:
             #return Response({'Error':'no se pudo cargar el documento'},status = status.HTTP_400_BAD_REQUEST)
             return Response(documento_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
@@ -158,21 +157,24 @@ def obtenerTextoPDF(file):
                 #print(first_page.extract_text().replace("",''))
         return text'''
         #documentoRenderisado = DocumentoOCR(file)
-        
-        pdfFileObj = open(settings.MEDIA_ROOT +'files'+file,'rb')
-        
-        pdfReader = PyPDF2.PdfFileReader(pdfFileObj,  strict = False)
-        
-        print(pdfReader.isEncrypted)
-        print(pdfReader.numPages)
-        #print(pdfReader.getPage(0).extractText())
-        for x in range(0, pdfReader.numPages):
-            pageObj = pdfReader.getPage(x)
-            #print(pageObj.extractText())
-            text = text + str(pageObj.extractText())
-            percent = ((x+1)*100)/pdfReader.numPages
-            print(str(round(percent,2))+" %")
-        return text 
+        try:
+
+            pdfFileObj = open(settings.MEDIA_ROOT +'files'+file,'rb')
+            
+            pdfReader = PyPDF2.PdfFileReader(pdfFileObj,  strict = False)
+            
+            print(pdfReader.isEncrypted)
+            print(pdfReader.numPages)
+            #print(pdfReader.getPage(0).extractText())
+            for x in range(0, pdfReader.numPages):
+                pageObj = pdfReader.getPage(x)
+                #print(pageObj.extractText())
+                text = text + str(pageObj.extractText())
+                percent = ((x+1)*100)/pdfReader.numPages
+                print(str(round(percent,2))+" %")
+            return text 
+        except:
+            return None
 
 
         '''text = extrarText(file)

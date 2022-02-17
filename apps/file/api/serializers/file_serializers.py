@@ -5,7 +5,8 @@ import os
 from django.conf import settings
 from apps.base.util import obtenerRuta
 from hurry.filesize import size, si
-
+from apps.tag.api.serializers.tag_serializer import TagListSerializer
+from apps.tag.models import Tag
 class FileCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
@@ -37,22 +38,23 @@ class FileDetalleSerializer(serializers.ModelSerializer):
     def to_representation(self,instance):
         fileSize = os.path.getsize(settings.MEDIA_ROOT+'files/'+instance.documento_file.name)
         folder = Folder.objects.filter(fileinfolder__file = instance).first()
+        tag_serializer = TagListSerializer(Tag.objects.filter(filetag__file = instance),many =True)
         if folder:
-            rutaLogica = obtenerRuta(folder.id,[folder.nombre],True)+"/"+instance.documento_file.name
-            ruta = obtenerRuta(folder.id,[folder.slug],False)+"/"+instance.slug
+            rutaLogica = "/"+obtenerRuta(folder.id,[folder.nombre],True)+"/"+instance.documento_file.name
+            ruta = "/"+obtenerRuta(folder.id,[folder.slug],False)+"/"+instance.slug
         else:
-            rutaLogica = "#"
-            ruta = "#"
-            instance.slug = "#"
+            rutaLogica = "?"
+            ruta = "?"
         return{
             'nombre':instance.nombreDocumento,
             'nombreArchivo':instance.documento_file.name,
             'slug':instance.slug,
             'size':str(size(fileSize, system=si)),
             'extension':instance.extension,
-            'rutaLogica': "/"+rutaLogica,
-            'rutaSlug':"/"+ruta,
+            'rutaLogica': rutaLogica,
+            'rutaSlug':ruta,
             'url':"https://localhost:8000/sgdapi/ver/"+instance.slug+"/",
+            'tags':tag_serializer.data
         }
 
 
