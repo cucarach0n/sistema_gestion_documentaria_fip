@@ -5,8 +5,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import resolve
+from apps.users.models import User
 class Authentication(object):
     user = None
+    userFull = None
+
     def get_user(self,request):
         token = get_authorization_header(request).split()
         current_site = resolve(request.path_info).url_name
@@ -26,6 +29,7 @@ class Authentication(object):
                 print(user)
                 if user != None:
                     self.user = user
+                    self.userFull = User.objects.filter(correo = user.correo).first()
                     return user 
             except:
                 return Response({'error':'Error en la validacion de las credenciales'},status = status.HTTP_403_FORBIDDEN) 

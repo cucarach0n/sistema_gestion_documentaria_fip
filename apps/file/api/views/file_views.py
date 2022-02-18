@@ -1,4 +1,3 @@
-from glob import escape
 from apps.file.models import File
 from apps.folder.models import Folder
 from rest_framework.response import Response
@@ -40,13 +39,13 @@ class FileObtenerViewSet(Authentication,viewsets.GenericViewSet):
     def get_queryset(self,pk=None):
         if pk is None:
             return None
-        return self.serializer_class().Meta.model.objects.filter(slug=pk).first()
+        return self.serializer_class().Meta.model.objects.filter(slug=pk,unidadArea_id = self.userFull.unidadArea_id).first()
     
     def retrieve(self,request,pk=None):
 
         documento_query = self.get_queryset(pk)
         if documento_query:
-            documento = File_Serializer().Meta.model.objects.filter(slug=pk).first()
+            documento = File_Serializer().Meta.model.objects.filter(slug=pk,unidadArea_id = self.userFull.unidadArea_id).first()
             if documento:
                
                 doc = str(documento.documento_file)#56 en linux / 34 windows
@@ -65,18 +64,20 @@ class FileObtenerViewSet(Authentication,viewsets.GenericViewSet):
                     # handle file not exist case here
                     response = Response({'error':'Hubo un error al obtener el archivo'},status = status.HTTP_400_BAD_REQUEST)
                 return response
-
+            response = Response({'error':'No existe el documento o archivo solicitado'},status = status.HTTP_400_BAD_REQUEST)
+        
+        return Response({'error':'Error al procesar la solicitud'},status = status.HTTP_400_BAD_REQUEST)
 class FileViewSet(Authentication,viewsets.GenericViewSet):
     
     serializer_class = FileFolderCreateSerializer
 
     def get_queryset(self,pk=None):
         if pk is None:
-            return FileCreateSerializer().Meta.model.objects.all()
-        return FileCreateSerializer().Meta.model.objects.filter(slug=pk).first()
+            return FileCreateSerializer().Meta.model.objects.filter(unidadArea_id = self.userFull.unidadArea_id)
+        return FileCreateSerializer().Meta.model.objects.filter(slug=pk,unidadArea_id = self.userFull.unidadArea_id).first()
     def list(self,request):
-        print('test ')
-        print(self.user)
+
+        print(self.userFull.unidadArea_id)
         documento_serializer = FileDetalleSerializer(self.get_queryset(),many = True)
         return Response(documento_serializer.data,status = status.HTTP_200_OK)
 
@@ -86,44 +87,48 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
         documento_serializer = self.serializer_class(data = request.data)
         
         if documento_serializer.is_valid():
-            current_site = get_current_site(request).domain
-            ruta = settings.MEDIA_ROOT+'files/'
-            fs = FileSystemStorage(location=ruta)
-            file = fs.save(request.FILES['documento_file'].name.replace(" ","_"),request.FILES['documento_file'])
-            fileurl = fs.url(file)
+            if Folder.objects.filter(slug = documento_serializer.validated_data['directorioslug'],unidadArea_id = self.userFull.unidadArea_id):
 
-            doc = fileurl[1:]
-            documento_serializer.validated_data['documento_file'] = doc
+                current_site = get_current_site(request).domain
+                ruta = settings.MEDIA_ROOT+'files/'
+                fs = FileSystemStorage(location=ruta)
+                file = fs.save(request.FILES['documento_file'].name.replace(" ","_"),request.FILES['documento_file'])
+                fileurl = fs.url(file)
 
-            documento = documento_serializer.save()
-            documento.extension,application = extraerExtencion(fileurl[1:])
-            documento.slug = get_random_string(length=11)
+                doc = fileurl[1:]
+                documento_serializer.validated_data['documento_file'] = doc
 
-            mensaje = "Documento cargado exitosamente"
-            #documentoOcr = DocumentoOCR(fileurl)
-            textPDF = obtenerTextoPDF(fileurl)
-            documento.contenidoOCR = textPDF #documentoOcr.obtenerTexto()
-            if textPDF == "":
-                mensaje = 'Documento cargado exitosamente, se estra procesando el contenido del archivo...' 
-                threading_text = threading.Thread(target=guardarOcr,args=(fileurl,documento.id,))
-                threading_text.start()
-                print('Cantidad de threading : ',threading.active_count())
-            documento.save()
-            parentID = Folder.objects.filter(slug = request.data['directorioslug']).first()
-            if parentID:
+                documento = documento_serializer.save()
+                documento.extension,application = extraerExtencion(fileurl[1:])
+                documento.slug = get_random_string(length=11)
+                documento.unidadArea_id = self.userFull.unidadArea_id
+                mensaje = "Documento cargado exitosamente"
+                #documentoOcr = DocumentoOCR(fileurl)
+                textPDF = obtenerTextoPDF(fileurl)
+                documento.contenidoOCR = textPDF #documentoOcr.obtenerTexto()
+                if textPDF == "":
+                    mensaje = 'Documento cargado exitosamente, se estra procesando el contenido del archivo...' 
+                    threading_text = threading.Thread(target=guardarOcr,args=(fileurl,documento.id,))
+                    threading_text.start()
+                    print('Cantidad de threading : ',threading.active_count())
+                documento.save()
+                parentID = Folder.objects.filter(slug = request.data['directorioslug']).first()
+                if parentID:
 
-                fileinfoler_serializer = FileInFolder_Serializer(data = {
-                    'file': documento.id,
-                    'parent_folder':parentID.id#Folder.objects.filter(slug = request.data['directorioslug']).first().id
-                })
-                if fileinfoler_serializer.is_valid():
-                    fileinfoler_serializer.save()
+                    fileinfoler_serializer = FileInFolder_Serializer(data = {
+                        'file': documento.id,
+                        'parent_folder':parentID.id#Folder.objects.filter(slug = request.data['directorioslug']).first().id
+                    })
+                    if fileinfoler_serializer.is_valid():
+                        fileinfoler_serializer.save()
 
-                '''threading_text = threading.Thread(target=guardarOcr,args=(fileurl,documento.id,))
-                threading_text.start()
-                print('Cantidad de threading : ',threading.active_count())'''
-                return Response({'Mensaje':mensaje},status = status.HTTP_200_OK)
-            return Response({'error':'La carpeta contenedora no existe'},status = status.HTTP_404_NOT_FOUND)          
+                    '''threading_text = threading.Thread(target=guardarOcr,args=(fileurl,documento.id,))
+                    threading_text.start()
+                    print('Cantidad de threading : ',threading.active_count())'''
+                    return Response({'Mensaje':mensaje},status = status.HTTP_200_OK)
+                #File.objects.filter(id = documento.id).delete()
+                return Response({'error':'La carpeta contenedora no existe'},status = status.HTTP_404_NOT_FOUND)
+            return Response({'error':'La carpeta contenedora no existe'},status = status.HTTP_401_UNAUTHORIZED)       
         else:
             #return Response({'Error':'no se pudo cargar el documento'},status = status.HTTP_400_BAD_REQUEST)
             return Response(documento_serializer.errors,status = status.HTTP_400_BAD_REQUEST)

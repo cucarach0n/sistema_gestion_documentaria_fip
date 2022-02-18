@@ -12,15 +12,15 @@ from rest_framework import viewsets
 from django.utils.crypto import get_random_string  
 
 
-class FolderViewSet(viewsets.GenericViewSet):
+class FolderViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = FolderSerializer
 
     def get_queryset(self,pk = None):
         if pk is None:
-            return self.serializer_class().Meta.model.objects.filter(carpeta_hija__isnull =True)
+            return self.serializer_class().Meta.model.objects.filter(carpeta_hija__isnull =True,unidadArea_id = self.userFull.unidadArea_id)
         else:
             try:
-                return self.serializer_class().Meta.model.objects.filter(slug = pk)
+                return self.serializer_class().Meta.model.objects.filter(slug = pk,unidadArea_id = self.userFull.unidadArea_id)
             except:
                 return None
     def list(self,request):
@@ -68,10 +68,11 @@ class FolderViewSet(viewsets.GenericViewSet):
             return Response(folders.data,status = status.HTTP_200_OK)
         return Response({'error':"El directorio no existe"},status = status.HTTP_400_BAD_REQUEST)
     def create(self,request):
-        
+        #if self.userFull.is_superuser == 1 :
         folder_serializer = self.serializer_class(data = request.data)
         if folder_serializer.is_valid():
             folder_serializer.validated_data['slug'] = get_random_string(length=11)
+            #folder_serializer.validated_data['unidadArea'] = self.userFull.unidadArea_id
             '''try:
                 os.makedirs(settings.MEDIA_ROOT + "files/"  + folder_serializer.validated_data['slug'] , exist_ok=True)
             except:
@@ -81,5 +82,6 @@ class FolderViewSet(viewsets.GenericViewSet):
             return Response({'Mensaje':"Se creo correctamente el directorio"},status = status.HTTP_200_OK)
         else:
             return Response(folder_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
+        #return Response({'error':"Acceso denegado"},status = status.HTTP_401_UNAUTHORIZED)
 
         

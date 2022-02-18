@@ -24,7 +24,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
         if 'uni.pe' not in value:
             raise serializers.ValidationError('Error, el correo no es valido para esta institucion')
         return value
-
     def validate(self,data):
         #if data['nombreUsuario'] in data['contrasena']:
         #    raise serializers.ValidationError('El nombre de usuario no puede ser igual a la contrasena')

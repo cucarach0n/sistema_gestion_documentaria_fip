@@ -14,11 +14,13 @@ class FileCreateSerializer(serializers.ModelSerializer):
 class FileFolderCreateSerializer(serializers.Serializer):
     nombreDocumento = serializers.CharField(max_length=50)
     documento_file = serializers.FileField()
-    directorioslug = serializers.CharField(max_length=6)
-    unidadareaid = serializers.CharField()
+    directorioslug = serializers.CharField(max_length=11)
+    #unidadareaid = serializers.CharField()
+
+    
 
     def create(self,validated_data):
-        file = File(nombreDocumento = validated_data['nombreDocumento'],documento_file = validated_data['documento_file'],unidadArea_id=validated_data['unidadareaid'])
+        file = File(nombreDocumento = validated_data['nombreDocumento'],documento_file = validated_data['documento_file'])#,unidadArea_id=validated_data['unidadareaid'])
         file.save()
         return file
 

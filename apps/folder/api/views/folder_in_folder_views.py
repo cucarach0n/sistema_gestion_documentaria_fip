@@ -17,7 +17,7 @@ def obtenerRutaAbsoluta(padreId,ruta):
             ruta.append(folderinfolder.parent_folder.slug) 
             obtenerRutaAbsoluta(folderinfolder.parent_folder_id,ruta )
         return '/'.join(ruta[::-1])
-class FolderInFolderViewSet(viewsets.GenericViewSet):
+class FolderInFolderViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = FolderInFolderValidateCreateSerializer
 
     def get_queryset(self):
@@ -32,7 +32,7 @@ class FolderInFolderViewSet(viewsets.GenericViewSet):
     def create(self,request):
         folderInFolder_serializer = self.serializer_class(data = request.data,context = request.data)
         if folderInFolder_serializer.is_valid():
-            folderPadre = Folder.objects.filter(slug = folderInFolder_serializer.data['padreSlug']).first()
+            folderPadre = Folder.objects.filter(slug = folderInFolder_serializer.data['padreSlug'],unidadArea_id = self.userFull.unidadArea_id).first()
             if folderPadre:
                 folder_data ={
                         'nombre':folderInFolder_serializer.validated_data['child_folder_name']
@@ -40,7 +40,8 @@ class FolderInFolderViewSet(viewsets.GenericViewSet):
                 folderHijo = FolderListSerializer(data = folder_data,context = folderPadre)
                 
                 if folderHijo.is_valid():
-                    folderHijo.validated_data['slug'] = get_random_string(length=6)
+                    folderHijo.validated_data['slug'] = get_random_string(length=11)
+                    folderHijo.validated_data['unidadArea_id'] = self.userFull.unidadArea_id
                     fHijo = folderHijo.save()
                     folderInFolder_Serializer = FolderInFolder_Serializer(data = {
                                                                 'child_folder_name':fHijo.nombre.replace(" ","_"),

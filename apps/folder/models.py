@@ -1,6 +1,6 @@
 from django.db import models
 from simple_history.models import HistoricalRecords
-
+from apps.unidadArea.models import UnidadArea
 # Create your models here.
 class Folder(models.Model):
     id =models.AutoField(primary_key=True)
@@ -8,6 +8,7 @@ class Folder(models.Model):
     nombre = models.CharField('Nombre del folder',max_length=45,null=False,blank=False)
     fechaCreacion = models.DateTimeField("Fecha de creacion",auto_now=True)
     fechaUpdate = models.DateTimeField("Fecha de actualizacion",auto_now_add=True)
+    unidadArea = models.ForeignKey(UnidadArea,on_delete=models.SET_NULL,null=True,blank=True)
 
     historical = HistoricalRecords()
 
