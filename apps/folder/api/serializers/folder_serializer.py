@@ -3,7 +3,7 @@ from apps.folder.models import Folder,FolderInFolder
 from apps.file.models import File
 from apps.file.api.serializers.file_serializers import FileDetalleSerializer
 from apps.base.util import obtenerRuta
-
+from apps.folder.api.serializers.treefolder_serializer import TreeFolderSerializer
 class FolderDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Folder
@@ -16,7 +16,7 @@ class FolderDetailSerializer(serializers.ModelSerializer):
             
             'slug':instance.slug,
             'nombre':instance.nombre,
-            'rutaFisica':"/"+rutaLogica,
+            'rutaFisica':rutaLogica,
             'rutaSlug':"/"+ruta,
             'fechaCreacion':instance.fechaCreacion,
             'fechaUpdate':instance.fechaUpdate
@@ -27,7 +27,7 @@ class FolderSerializer(serializers.ModelSerializer):
         model = Folder
         exclude = ('id','fechaUpdate','fechaCreacion','slug')
     def validate_nombre(self,value):
-        print(value)
+        #print(value)
         if Folder.objects.filter(nombre = value):    
             folders = FolderInFolder.objects.filter(child_folder_id = Folder.objects.filter(nombre = value).first())
             if folders is None:
@@ -88,14 +88,15 @@ class FolderDirecotorioListSerializer(serializers.ModelSerializer):
         files = FileDetalleSerializer(File.objects.filter(fileinfolder__parent_folder__id =instance.id),many = True,context = {'padre':instance.id})
         ruta = obtenerRuta(instance.id,[instance.slug],False)
         rutaLogica = obtenerRuta(instance.id,[instance.nombre],True)
-        
+        treeArbolSerializer = TreeFolderSerializer(Folder.objects.filter(carpeta_hija__parent_folder_id = instance.id),many = True)
         return {
             'slug':instance.slug,
             'nombre':instance.nombre,
-            'rutaLogica': "/"+rutaLogica,
+            'rutaLogica': rutaLogica,
             'rutaSlug': "/"+ruta,
             'fechaCreacion':instance.fechaCreacion,
             'fechaUpdate':instance.fechaUpdate,
             'subdirectorios': folder.data,
-            'files':files.data
+            'files':files.data,
+            'treefolders':treeArbolSerializer.data
         }

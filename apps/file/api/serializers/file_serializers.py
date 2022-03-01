@@ -1,6 +1,7 @@
+from apps.folder.models import FolderInFolder
 from apps.unidadArea.models import UnidadArea
 from rest_framework import serializers
-from apps.file.models import File, Folder
+from apps.file.models import File, FileInFolder, Folder
 import os
 from django.conf import settings
 from apps.base.util import obtenerRuta
@@ -36,17 +37,22 @@ class FileUpdateOcrSerializer(serializers.ModelSerializer):
 class FileDetalleSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
-        exclude = ('contenidoOCR',)
+        exclude = ('contenidoOCR','unidadArea',)
     def to_representation(self,instance):
         fileSize = os.path.getsize(settings.MEDIA_ROOT+'files/'+instance.documento_file.name)
         folder = Folder.objects.filter(fileinfolder__file = instance).first()
+        fileinfolder = FileInFolder.objects.filter(file = instance).first()
         tag_serializer = TagListSerializer(Tag.objects.filter(filetag__file = instance),many =True)
         if folder:
-            rutaLogica = "/"+obtenerRuta(folder.id,[folder.nombre],True)+"/"+instance.documento_file.name
+            '''rutaLogica = "/"+obtenerRuta(folder.id,[folder.nombre],True)+"/"+instance.documento_file.name
+            ruta = "/"+obtenerRuta(folder.id,[folder.slug],False)+"/"+instance.slug'''
+            rutaLogica = obtenerRuta(folder.id,[folder.nombre],True)
             ruta = "/"+obtenerRuta(folder.id,[folder.slug],False)+"/"+instance.slug
         else:
             rutaLogica = "?"
             ruta = "?"
+        
+        print(folder)
         return{
             'nombre':instance.nombreDocumento,
             'nombreArchivo':instance.documento_file.name,
@@ -56,8 +62,22 @@ class FileDetalleSerializer(serializers.ModelSerializer):
             'rutaLogica': rutaLogica,
             'rutaSlug':ruta,
             'url':"https://localhost:8000/sgdapi/ver/"+instance.slug+"/",
-            'tags':tag_serializer.data
+            'tags':tag_serializer.data,
+            'fechaCreacion':fileinfolder.fechaCreacion,
+            'fechaUpdate':fileinfolder.fechaUpdate
         }
+class FileBuscarSerializer(serializers.Serializer):
+    buscar = serializers.CharField(allow_blank=True)
+
+    def validate_buscar(self,value):
+        return value
+    def validate(self,data):
+        return data
+    class Meta:
+        model = File
+
+
+
 
 
     

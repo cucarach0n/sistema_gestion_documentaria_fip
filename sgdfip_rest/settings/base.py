@@ -46,6 +46,7 @@ LOCAL_APPS =[
     'apps.folder',
     'apps.tag',
     'apps.unidadArea',
+    'apps.etiqueta',
     'apps.file',
     'apps.users'
 ]

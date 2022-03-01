@@ -35,7 +35,7 @@ def obtenerRuta(padreId,ruta,logico):
             else:
                 ruta.append(folderinfolder.parent_folder.slug) 
             obtenerRuta(folderinfolder.parent_folder_id,ruta,logico )
-        return '/'.join(ruta[::-1])
+        return ' > '.join(ruta[::-1])
 
 class DocumentoOCR():
     PDF_file = None

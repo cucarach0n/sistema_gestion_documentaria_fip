@@ -7,7 +7,6 @@ from apps.users.api.serializers.general_serializers import Contrasena_reinicioSe
 from apps.users.api.serializers.contrasenaReinicio_serializer import ContrasenaReinicioActivateSerializer
 from rest_framework import status
 from rest_framework import generics
-
 from apps.base.util import send_email
 from datetime import datetime
 from django.utils.crypto import get_random_string
@@ -47,23 +46,23 @@ class UserAPIView(APIView):
     def get(self,request):
         users = User.objects.all()
         users_serializer = UserSerializer(users,many = True)
-        return Response(users_serializer.data, status = status.HTTP_200_OK );
+        return Response(users_serializer.data, status = status.HTTP_200_OK )
 class UserCreateAPIView(generics.CreateAPIView):
     serializer_class = UserCreateSerializer
     def post(self,request):
         serializer = self.serializer_class(data = request.data,context = request.data)
         if serializer.is_valid():
             current_site = get_current_site(request).domain
-            fs = FileSystemStorage(location= settings.MEDIA_ROOT +'avatars/')
+            '''fs = FileSystemStorage(location= settings.MEDIA_ROOT +'avatars/')
             file = fs.save(request.FILES['avatar'].name.replace(" ","_"),request.FILES['avatar'])
             fileurl = fs.url(file)
             print(fileurl)
             doc = fileurl[1:]
-            #absURl = 'http://'+current_site+'/media/avatars'+ doc
-            #absURl = 'avatars/'+ doc
-            serializer.validated_data['avatar'] = doc
+            serializer.validated_data['avatar'] = doc'''
             user = serializer.save()
 
+            #absURl = 'http://'+current_site+'/media/avatars'+ doc
+            #absURl = 'avatars/'+ doc
             datos = {'correo':user.correo,
                     'token':get_random_string(length=40),
                     'fechaCambio':datetime.today().strftime('%Y-%m-%d'),

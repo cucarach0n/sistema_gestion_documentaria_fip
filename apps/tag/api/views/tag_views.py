@@ -3,6 +3,8 @@ from apps.users.authenticacion_mixings import Authentication
 from rest_framework.response import Response
 from rest_framework import status
 from apps.tag.api.serializers.tag_serializer import TagCreateSerializer,TagListSerializer
+from django.db.models import Q
+from django.core.paginator import Paginator
 
 class TagBuscarAPIView(viewsets.GenericViewSet):
 

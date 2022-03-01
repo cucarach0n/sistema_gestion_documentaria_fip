@@ -62,7 +62,7 @@ class FolderInFolderViewSet(Authentication,viewsets.GenericViewSet):
                         '''          
                         folderInFolder_Serializer.save()
 
-                    return Response({'Mensaje':"Se registro correctamente el Subdirectorio"},status = status.HTTP_200_OK)
+                    return Response({"slug":fHijo.slug,'name':fHijo.nombre},status = status.HTTP_200_OK)
                 else:
                     return Response(folderHijo.errors,status = status.HTTP_400_BAD_REQUEST)     
             else:

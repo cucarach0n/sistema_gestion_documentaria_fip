@@ -1,7 +1,6 @@
-
-from lib2to3.pgen2 import token
 from django.contrib.sessions.models import Session
-from datetime import date, datetime
+from datetime import datetime
+from apps.folder.models import Folder
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
@@ -14,19 +13,24 @@ from django.contrib.auth import authenticate
 class UserToken(Authentication,APIView):
 
     def post(self,request,*args,**kwargs):
-        print(self.user)
+        
+        #print(self.user)
         #username = request.GET.get('username')
         #print(username)
         try:
+            folder = Folder.objects.filter(carpeta_hija__isnull =True,unidadArea_id = self.userFull.unidadArea_id).first()
+            #print(folder)
             user_token,create = Token.objects.get_or_create(user = self.user)
-            print(user_token.created)
+            #print(user_token.created)
             user = UserTokenSerializer(self.user)
             
             return Response({
                 'token': user_token.key,
-                'user' : user.data
+                'user' : user.data,
+                'slugPadre': folder.slug,
+                'carpetaPadre': folder.nombre
                 },status = status.HTTP_200_OK)
-    
+            
         except:
             return Response({
                 'error': 'Credenciales enviadas incorrectas'

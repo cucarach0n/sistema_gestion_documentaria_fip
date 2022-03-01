@@ -1,18 +1,33 @@
+from apps.folder.api.serializers.folder_serializer import FolderSerializer
 from rest_framework import viewsets
 from apps.users.authenticacion_mixings import Authentication
 from rest_framework.response import Response
 from rest_framework import status
 from apps.unidadArea.api.serializers.general_serializers import UnidadArea_Serializer
 from apps.unidadArea.api.serializers.unidadArea_serializers import UnidadAreaCreate_Serializer
-
+from django.utils.crypto import get_random_string  
 
 class unidadAreaCreateAPIView(viewsets.GenericViewSet):
     serializer_class = UnidadAreaCreate_Serializer
     def create(self,request):
         unidadArea_serializer = self.serializer_class(data = request.data)
         if unidadArea_serializer.is_valid():
-            unidadArea_serializer.save()
-            return Response({'mensaje':'Unidad creada exitosamente'},status = status.HTTP_200_OK)
+            
+            unidadArea = unidadArea_serializer.save()
+
+            folder_serializer = FolderSerializer(data = {
+                    'nombre': unidadArea.nombreUnidad,
+                    'unidadArea':unidadArea.id
+                })
+            if folder_serializer.is_valid():
+                folder_serializer.validated_data['slug'] = get_random_string(length=11) 
+                folder_serializer.save()
+                return Response({
+                    'idUnidad': unidadArea.id,
+                    'nombreUnidad' : unidadArea.nombreUnidad
+                },status = status.HTTP_200_OK)
+            else:
+                return Response(folder_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
         return Response(unidadArea_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
 
 

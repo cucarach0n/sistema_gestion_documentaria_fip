@@ -14,12 +14,24 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         #fields = ['name']
-        exclude = ('estado',)
-
+        exclude = ('estado','password','groups','user_permissions','last_login',)
+    def to_representation(self,instance):
+        return {
+        "id": instance.id,
+        "is_superuser": instance.is_superuser,
+        "correo": instance.correo,
+        "name": instance.name,
+        "last_name": instance.last_name,
+        "avatar": instance.avatar.name,
+        "is_active": instance.is_active,
+        "is_staff": instance.is_staff,
+        "idUnidadArea": instance.unidadArea_id,
+        "unidadArea": instance.unidadArea.nombreUnidad
+    }
 class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        exclude = ('id','estado','last_login','is_superuser','is_active','is_staff','groups','user_permissions',)                
+        exclude = ('id','estado','last_login','is_superuser','is_active','groups','user_permissions','avatar',)                
     def validate_correo(self, value):
         if 'uni.pe' not in value:
             raise serializers.ValidationError('Error, el correo no es valido para esta institucion')

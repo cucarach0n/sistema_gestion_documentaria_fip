@@ -2,7 +2,10 @@ from apps.file.models import File
 from apps.folder.models import Folder
 from rest_framework.response import Response
 from rest_framework import status
-from apps.file.api.serializers.file_serializers import FileCreateSerializer,FileObtenerSerializer,FileFolderCreateSerializer,FileDetalleSerializer,FileUpdateOcrSerializer
+from apps.file.api.serializers.file_serializers import (
+    FileCreateSerializer,FileObtenerSerializer,FileFolderCreateSerializer,
+    FileDetalleSerializer,FileUpdateOcrSerializer,FileBuscarSerializer
+    )
 from apps.file.api.serializers.general_serializers import File_Serializer,FileInFolder_Serializer
 from apps.users.authenticacion_mixings import Authentication
 from django.contrib.sites.shortcuts import get_current_site
@@ -18,6 +21,8 @@ import PyPDF2
 from django.utils.crypto import get_random_string
 #import fitz
 
+from django.db.models import Q
+from django.core.paginator import Paginator
 
 def guardarOcr(file,id):
     documentoRenderisado = DocumentoOCR(file)
@@ -67,10 +72,37 @@ class FileObtenerViewSet(Authentication,viewsets.GenericViewSet):
             response = Response({'error':'No existe el documento o archivo solicitado'},status = status.HTTP_400_BAD_REQUEST)
         
         return Response({'error':'Error al procesar la solicitud'},status = status.HTTP_400_BAD_REQUEST)
+
+class FileListViewSet(Authentication,viewsets.GenericViewSet):
+    serializer_class = FileFolderCreateSerializer
+
+    def get_queryset(self,pk=None):
+        if pk is None:
+            return FileDetalleSerializer.Meta.model.objects.filter(unidadArea_id = self.userFull.unidadArea_id)
+        return FileDetalleSerializer.Meta.model.objects.filter(slug=pk,unidadArea_id = self.userFull.unidadArea_id).first()
+    def list(self,request):
+
+        print(self.userFull.unidadArea_id)
+        documento_serializer = FileDetalleSerializer(self.get_queryset(),many = True)
+        return Response(documento_serializer.data,status = status.HTTP_200_OK)
+    def retrieve(self,request,pk=None):
+        documento = FileDetalleSerializer(self.get_queryset(pk))
+        if documento:
+            return Response(documento.data,status=status.HTTP_200_OK)
+        return Response({'error':'No existe el documento solicitado'},status = status.HTTP_404_NOT_FOUND)
+    def update(self,request,pk=None):
+        documento = self.get_queryset(pk)
+        if documento:
+            documento_serializer = self.get_serializer(documento,data = request.data)
+            if documento_serializer.is_valid():
+                documento_serializer.save()
+                return Response({'mensaje':'Documento actualizado correctamente'},status = status.HTTP_200_OK)                
+            return Response({'error':'hubo un error al actualizar los datos'},status = status.HTTP_400_BAD_REQUEST)
+        return Response({'error':'No existe el documento'},status = status.HTTP_400_BAD_REQUEST)
 class FileViewSet(Authentication,viewsets.GenericViewSet):
     
     serializer_class = FileFolderCreateSerializer
-
+    '''
     def get_queryset(self,pk=None):
         if pk is None:
             return FileCreateSerializer().Meta.model.objects.filter(unidadArea_id = self.userFull.unidadArea_id)
@@ -80,7 +112,7 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
         print(self.userFull.unidadArea_id)
         documento_serializer = FileDetalleSerializer(self.get_queryset(),many = True)
         return Response(documento_serializer.data,status = status.HTTP_200_OK)
-
+    '''
     
 
     def create(self,request):
@@ -94,7 +126,7 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
                 fs = FileSystemStorage(location=ruta)
                 file = fs.save(request.FILES['documento_file'].name.replace(" ","_"),request.FILES['documento_file'])
                 fileurl = fs.url(file)
-
+                
                 doc = fileurl[1:]
                 documento_serializer.validated_data['documento_file'] = doc
 
@@ -132,12 +164,12 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
         else:
             #return Response({'Error':'no se pudo cargar el documento'},status = status.HTTP_400_BAD_REQUEST)
             return Response(documento_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
-    def retrieve(self,request,pk=None):
+    '''def retrieve(self,request,pk=None):
         documento = FileDetalleSerializer(self.get_queryset(pk))
         if documento:
             return Response(documento.data,status=status.HTTP_200_OK)
-        return Response({'error':'No existe el documento solicitado'},status = status.HTTP_404_NOT_FOUND)
-    def update(self,request,pk=None):
+        return Response({'error':'No existe el documento solicitado'},status = status.HTTP_404_NOT_FOUND)'''
+    '''def update(self,request,pk=None):
         documento = self.get_queryset(pk)
         if documento:
             documento_serializer = self.serializer_class(documento,data = request.data)
@@ -145,8 +177,24 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
                 documento_serializer.save()
                 return Response({'mensaje':'Documento actualizado correctamente'},status = status.HTTP_200_OK)                
             return Response({'error':'hubo un error al actualizar los datos'},status = status.HTTP_400_BAD_REQUEST)
-        return Response({'error':'No existe el documento'},status = status.HTTP_400_BAD_REQUEST)
+        return Response({'error':'No existe el documento'},status = status.HTTP_400_BAD_REQUEST)'''
 
+
+class FileBuscarAPIView(Authentication,viewsets.GenericViewSet):
+
+    serializer_class = FileBuscarSerializer
+    def get_queryset(self,data):
+        return self.get_serializer().Meta.model.objects.filter(Q(nombreDocumento__icontains = data['buscar'])| 
+                                                            Q(contenidoOCR__icontains = data['buscar'])
+                                                            ,unidadArea_id = self.userFull.unidadArea_id).distinct()
+    
+    def create(self,request):
+        file_serializer = self.get_serializer(data = request.data)
+        if file_serializer.is_valid():
+            fileBusqueda_serializer = FileDetalleSerializer(self.get_queryset(file_serializer.data),many = True)
+            return Response(fileBusqueda_serializer.data,status = status.HTTP_200_OK)
+        else:
+            return Response(file_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
 
 def obtenerTextoPDF(file):
         text =""
