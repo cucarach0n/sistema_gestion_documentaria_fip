@@ -1,10 +1,11 @@
+from dataclasses import fields
 from rest_framework import serializers
 from apps.users.models import User
 
 class UserTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['correo','name','last_name','avatar']
+        fields = ['correo','name','last_name','avatar','is_staff','is_superuser']
     def validate_avatar(self,value):
         return value
     def validate(self,data):
@@ -52,3 +53,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         user_actualisado.set_password(validated_data['password'])
         user_actualisado.save()
         return user_actualisado
+class UserDeleteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id']

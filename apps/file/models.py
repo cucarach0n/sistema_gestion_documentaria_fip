@@ -15,7 +15,7 @@ class File(models.Model):
     contenidoOCR = models.TextField('Contenidos del documento', null = True, blank = True)
     documento_file = models.FileField('Archivo del documento', upload_to="",blank = False,null = False)
     extension = models.CharField('Extension de los archivos subidos',max_length=10,null = True, blank = True)
-    unidadArea = models.ForeignKey(UnidadArea,on_delete = models.SET_NULL,null=True,blank=True)
+    unidadArea = models.ForeignKey(UnidadArea,on_delete = models.CASCADE,null=True,blank=True)
     historical = HistoricalRecords()
 
     @property

@@ -32,7 +32,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField('Apellidos', max_length = 255, blank = True, null = True)
     avatar = models.ImageField('Imagen de perfil', upload_to='avatars/', default="avataruni.png",max_length=255, null=True, blank = True)
     estado = models.SmallIntegerField('Estado del usuario',null = True, default=1, blank = False)
-    unidadArea = models.ForeignKey(UnidadArea, on_delete=models.SET_NULL,null =True,blank=True)
+    unidadArea = models.ForeignKey(UnidadArea, on_delete=models.CASCADE,null =True,blank=True)
     is_active = models.BooleanField(default = True)
     is_staff = models.SmallIntegerField('Staff',null = True, default=1, blank = True)
     historical = HistoricalRecords()

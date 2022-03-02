@@ -3,7 +3,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from apps.folder.api.serializers.folder_serializer import (
     FolderSerializer,
-    FolderDirecotorioListSerializer
+    FolderDirecotorioListSerializer,
+    FolderDeleteSerializer,
+    FolderUpdateSerializer
     )
 from apps.users.authenticacion_mixings import Authentication
 import os
@@ -86,3 +88,33 @@ class FolderViewSet(Authentication,viewsets.GenericViewSet):
         #return Response({'error':"Acceso denegado"},status = status.HTTP_401_UNAUTHORIZED)
 
         
+class FolderDeleteAPIView(Authentication,viewsets.GenericViewSet):
+    serializer_class = FolderDeleteSerializer
+    def get_queryset(self,pk = None):
+        return self.get_serializer().Meta.model.objects.filter(slug = pk).first()
+    
+    def destroy(self,request,pk = None):
+        folderSerializer = self.get_serializer(data = request.data)
+        if folderSerializer.is_valid():
+            if self.userFull.is_superuser:
+                folderDeleteResult = self.get_queryset(pk)
+                folderDeleteResult.delete()
+                return Response({'Mensaje':'Folder eliminado correctamente'},status = status.HTTP_200_OK)
+            else:
+                return Response({'Error':'No permitido'},status = status.HTTP_400_BAD_REQUEST)  
+        else:
+            return Response(folderSerializer.errors,status = status.HTTP_400_BAD_REQUEST) 
+class FolderUpdateAPIView(Authentication,viewsets.GenericViewSet):
+    serializer_class = FolderUpdateSerializer
+    def get_queryset(self,pk = None):
+        return self.get_serializer().Meta.model.objects.filter(slug = pk).first()
+    def update(self,request,pk = None):
+        if self.get_queryset(pk):
+            folderUpdateSerializer = self.get_serializer(self.get_queryset(pk),data = request.data)
+            if folderUpdateSerializer.is_valid():
+                folderUpdateSerializer.save()
+                return Response({'Mensaje':'Folder actualizado correctamente'},status = status.HTTP_200_OK)
+            else:
+                return Response(folderUpdateSerializer.errors,status = status.HTTP_400_BAD_REQUEST)
+        else:
+             return Response({'Error':'El folder no existe'},status = status.HTTP_200_OK)

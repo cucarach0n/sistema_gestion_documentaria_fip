@@ -100,3 +100,11 @@ class FolderDirecotorioListSerializer(serializers.ModelSerializer):
             'files':files.data,
             'treefolders':treeArbolSerializer.data
         }
+class FolderDeleteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Folder
+        fields = ['slug']
+class FolderUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Folder
+        fields = ['nombre']

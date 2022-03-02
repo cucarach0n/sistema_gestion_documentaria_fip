@@ -61,7 +61,7 @@ class FileDetalleSerializer(serializers.ModelSerializer):
             'extension':instance.extension,
             'rutaLogica': rutaLogica,
             'rutaSlug':ruta,
-            'url':"https://localhost:8000/sgdapi/ver/"+instance.slug+"/",
+            'url':"http://150.230.71.234/file/ver/"+instance.slug+"/",
             'tags':tag_serializer.data,
             'fechaCreacion':fileinfolder.fechaCreacion,
             'fechaUpdate':fileinfolder.fechaUpdate

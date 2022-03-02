@@ -2,7 +2,7 @@ from apps.users.models import Contrasena_reinicio
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from apps.users.models import User
-from apps.users.api.serializers.user_serializers import UserSerializer,UserCreateSerializer
+from apps.users.api.serializers.user_serializers import UserSerializer,UserCreateSerializer,UserDeleteSerializer
 from apps.users.api.serializers.general_serializers import Contrasena_reinicioSerializer
 from apps.users.api.serializers.contrasenaReinicio_serializer import ContrasenaReinicioActivateSerializer
 from rest_framework import status
@@ -76,8 +76,8 @@ class UserCreateAPIView(generics.CreateAPIView):
                 
                 absurl = 'https://'+current_site+'/usuario/validar/'+userSendEmail.token
                 send_email({'email':'devalo19@gmail.com','domain': str(absurl)})
-
-            return Response({'Mensaje':'Se registro el usuario correctamente'},status = status.HTTP_200_OK)
+            userCreadoSerializer = UserSerializer(user)
+            return Response(userCreadoSerializer.data,status = status.HTTP_200_OK)
         return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
 
 
@@ -103,6 +103,22 @@ class userActivateRetrieveAPIView(APIView):
         else:
             return Response({'Error':'No se pudo validar dicha informacion'},status = status.HTTP_400_BAD_REQUEST)
 
+class userDeleteAPIView(Authentication,generics.DestroyAPIView):
+    serializer_class = UserDeleteSerializer
+    def get_queryset(self,pk = None):
+        return self.get_serializer().Meta.model.objects.filter(id = pk).first()
+    
+    def delete(self,request,pk = None):
+        userSerializer = self.get_serializer(data = request.data)
+        if userSerializer.is_valid():
+            if self.userFull.is_superuser:
+                userDeleteResult = self.get_queryset(pk)
+                userDeleteResult.delete()
+                return Response({'Mensaje':'Usuario eliminado correctamente'},status = status.HTTP_200_OK)
+            else:
+                return Response({'Error':'No tiene permitido realizar esta accion'},status = status.HTTP_400_BAD_REQUEST)  
+        else:
+            return Response(userSerializer.errors,status = status.HTTP_400_BAD_REQUEST) 
 
 
 

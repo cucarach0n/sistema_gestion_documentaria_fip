@@ -1,3 +1,4 @@
+from unittest import removeResult
 from apps.file.models import File
 from rest_framework import serializers
 from apps.etiqueta.models import Etiqueta
@@ -16,6 +17,11 @@ class EtiquetaCreateSerializer(serializers.Serializer):
             return value
         else:
             raise serializers.ValidationError('Error, ya creastes esta etiqueta para este file') 
+    def validate_slug(self,value):
+        fileFind = File.objects.filter(slug = self.context['fileSlug'],unidadaArea_id = self.context['idUnidadArea']).first()
+        if fileFind:
+            return value
+        raise serializers.ValidationError('Error, este file no existe en tu unidad') 
     def validate(self,data):
         return data
         
@@ -23,4 +29,10 @@ class EtiquetaCreateSerializer(serializers.Serializer):
         fileResult = File.objects.filter(slug = validated_data['slugFile']).first()
         etiqueta = Etiqueta(file_id = fileResult.id,nombre = validated_data['nombre'],user_id = self.context['userId'])
         etiqueta.save()
-        return etiqueta     
+        return etiqueta
+
+class EtiquetaBuscarSerializer(serializers.Serializer):
+    slugFile = serializers.CharField(max_length = 11,required=True)
+         
+    def validate(self,data):
+        return data

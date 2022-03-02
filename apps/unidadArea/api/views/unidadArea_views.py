@@ -4,7 +4,7 @@ from apps.users.authenticacion_mixings import Authentication
 from rest_framework.response import Response
 from rest_framework import status
 from apps.unidadArea.api.serializers.general_serializers import UnidadArea_Serializer
-from apps.unidadArea.api.serializers.unidadArea_serializers import UnidadAreaCreate_Serializer
+from apps.unidadArea.api.serializers.unidadArea_serializers import UnidadAreaCreate_Serializer,UnidadAreaDeleteSerializer
 from django.utils.crypto import get_random_string  
 
 class unidadAreaCreateAPIView(viewsets.GenericViewSet):
@@ -63,7 +63,22 @@ class unidadAreaBuscarAPIView(viewsets.GenericViewSet):
         else:
             return Response({'error':'Se produjo un error en la busqueda'},status = status.HTTP_400_BAD_REQUEST)
        
-        
+class unidadAreaDeleteAPIView(Authentication,viewsets.GenericViewSet):
+    serializer_class = UnidadAreaDeleteSerializer
+    def get_queryset(self,pk = None):
+        return self.get_serializer().Meta.model.objects.filter(id = pk).first()
+    
+    def destroy(self,request,pk = None):
+        unidadAreaSerializer = self.get_serializer(data = request.data)
+        if unidadAreaSerializer.is_valid():
+            if self.userFull.is_superuser:
+                unidadAreaDeleteResult = self.get_queryset(pk)
+                unidadAreaDeleteResult.delete()
+                return Response({'Mensaje':'Unidad Area eliminado correctamente'},status = status.HTTP_200_OK)
+            else:
+                return Response({'Error':'No permitido'},status = status.HTTP_400_BAD_REQUEST)  
+        else:
+            return Response(unidadAreaSerializer.errors,status = status.HTTP_400_BAD_REQUEST) 
         
 
 

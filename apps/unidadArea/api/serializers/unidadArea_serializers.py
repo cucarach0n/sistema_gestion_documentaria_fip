@@ -11,3 +11,7 @@ class UnidadAreaCreate_Serializer(serializers.ModelSerializer):
         model = UnidadArea
         exclude = ('id',)
 
+class UnidadAreaDeleteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UnidadArea
+        fields = ['id']
