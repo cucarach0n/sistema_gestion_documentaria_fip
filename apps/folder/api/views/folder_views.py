@@ -1,11 +1,13 @@
 
+from apps.folder.models import Folder
 from rest_framework.response import Response
 from rest_framework import status
 from apps.folder.api.serializers.folder_serializer import (
     FolderSerializer,
     FolderDirecotorioListSerializer,
     FolderDeleteSerializer,
-    FolderUpdateSerializer
+    FolderUpdateSerializer,
+    FolderHistorySerializer
     )
 from apps.users.authenticacion_mixings import Authentication
 import os
@@ -118,3 +120,16 @@ class FolderUpdateAPIView(Authentication,viewsets.GenericViewSet):
                 return Response(folderUpdateSerializer.errors,status = status.HTTP_400_BAD_REQUEST)
         else:
              return Response({'Error':'El folder no existe'},status = status.HTTP_200_OK)
+
+class FolderHistoryAPIView(Authentication,viewsets.GenericViewSet):
+    serializer_class = FolderHistorySerializer
+    def get_queryset(self,pk=None):
+        return Folder.historical.filter(id = pk,history_user_id=self.userFull.id)
+    
+    def retrieve(self,request,pk = None):
+        historyFolder = self.get_queryset(Folder.objects.get(slug = pk).id)
+        folderHistorialSerializer = self.get_serializer(historyFolder,many = True)
+        return Response(folderHistorialSerializer.data, status = status.HTTP_200_OK)
+
+
+

@@ -1,5 +1,3 @@
-
-import imp
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
@@ -36,6 +34,13 @@ def obtenerRuta(padreId,ruta,logico):
                 ruta.append(folderinfolder.parent_folder.slug) 
             obtenerRuta(folderinfolder.parent_folder_id,ruta,logico )
         return ' > '.join(ruta[::-1])
+
+
+def setHistory(model,razon,user):
+    history = model.historical.filter(id = model.id).first()
+    history.history_user_id = user
+    history.history_change_reason = razon
+    history.save()
 
 class DocumentoOCR():
     PDF_file = None

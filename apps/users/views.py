@@ -1,5 +1,6 @@
 from django.contrib.sessions.models import Session
 from datetime import datetime
+from apps.base.util import setHistory
 from apps.folder.models import Folder
 from rest_framework.views import APIView
 from rest_framework import status
@@ -23,7 +24,8 @@ class UserToken(Authentication,APIView):
             user_token,create = Token.objects.get_or_create(user = self.user)
             #print(user_token.created)
             user = UserTokenSerializer(self.user)
-            
+            #set history user
+            #setHistory(user,"Solicitud token nuevo",user.id)
             return Response({
                 'token': user_token.key,
                 'user' : user.data,
@@ -48,8 +50,13 @@ class Login(ObtainAuthToken):
                 print('usuario autenticado')
                 token,created = Token.objects.get_or_create(user = user)
                 user_serializer = UserTokenSerializer(user)
-                user_serializer.data['avatar'] = 'asdasd'
-                print(user.avatar)
+                #user_serializer.data['avatar'] = 'asdasd'
+                #print(user.avatar)
+                
+                user.last_login = datetime.today()
+                user.save()
+                #set history user
+                setHistory(user,"inicio de sesion",user.id)
                 if created:
                     return Response({
                         'token':token.key,

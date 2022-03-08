@@ -5,12 +5,12 @@ from apps.unidadArea.models import UnidadArea
 class Folder(models.Model):
     id =models.AutoField(primary_key=True)
     slug = models.CharField('Slug',unique=True,max_length=11,null=False,blank=False)
-    nombre = models.CharField('Nombre del folder',max_length=45,null=False,blank=False)
+    nombre = models.CharField('Nombre del folder',max_length=250,null=False,blank=False)
     fechaCreacion = models.DateTimeField("Fecha de creacion",auto_now=True)
     fechaUpdate = models.DateTimeField("Fecha de actualizacion",auto_now_add=True)
     unidadArea = models.ForeignKey(UnidadArea,on_delete=models.CASCADE,null=True,blank=True)
 
-    historical = HistoricalRecords()
+    historical = HistoricalRecords(excluded_fields=['slug','nombre','fechaCreacion','fechaUpdate','unidadArea',])
 
     @property
     def _history_user(self):
@@ -28,7 +28,7 @@ class Folder(models.Model):
 
 class FolderInFolder(models.Model):
     id =models.AutoField(primary_key=True)
-    child_folder_name = models.CharField('Nombre del folder Hijo',max_length=45,null=False,blank=False)
+    child_folder_name = models.CharField('Nombre del folder Hijo',max_length=250,null=False,blank=False)
     parent_folder = models.ForeignKey('Folder',on_delete = models.CASCADE,related_name='carpeta_padre')
     child_folder = models.ForeignKey('Folder',on_delete = models.CASCADE,related_name='carpeta_hija')
     fechaCreacion = models.DateTimeField("Fecha de creacion",auto_now=True)

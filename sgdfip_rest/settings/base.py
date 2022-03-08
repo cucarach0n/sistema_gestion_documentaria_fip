@@ -43,6 +43,7 @@ BASE_APPS = [
 #'apps.sgdapi',
 LOCAL_APPS =[
     'apps.base',
+    'apps.historialAccion',
     'apps.folder',
     'apps.tag',
     'apps.unidadArea',
@@ -130,10 +131,10 @@ USE_TZ = False
 AUTH_USER_MODEL = 'users.User'
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000"
+    "http://localhost:3000","https://fipuni.portalmybot.com"
 ]
 CORS_ORIGIN_WHITELIST = [
-    "http://localhost:3000"
+    "http://localhost:3000","https://fipuni.portalmybot.com"
 ]
 
 

@@ -1,13 +1,12 @@
 from django.db import models
 from simple_history.models import HistoricalRecords
-# Create your models here.
 
+# Create your models here.
 class Tag(models.Model):
     id = models.AutoField(primary_key=True)
     tagName = models.CharField("Nombre del tag",max_length=50,unique=True,null=False,blank=False)
     fechaRegistro = models.DateTimeField("Fecha del registro",auto_now=True)
     fechaUpdate = models.DateTimeField("Fecha del registro",auto_now=False,auto_now_add=True)
-
     historical = HistoricalRecords()
 
     @property

@@ -1,3 +1,5 @@
+from datetime import datetime
+from apps.base.util import setHistory
 from rest_framework import viewsets
 from apps.users.authenticacion_mixings import Authentication
 from rest_framework.response import Response
@@ -54,17 +56,26 @@ class TagAPIView(viewsets.GenericViewSet):
     def create(self,request):
         tag_serializer = self.serializer_class(data = request.data)
         if tag_serializer.is_valid():
-            tag_serializer.save()
+            
+            tagSave = tag_serializer.save()
+
+            #seteando el registro del historial
+            #setHistory(tagSave,'agregar tag nuevo',1)
+            '''history = tagSave.historical.create(id = tagSave.id,tagName = tagSave.tagName, fechaRegistro = tagSave.fechaRegistro
+                                                ,fechaUpdate = tagSave.fechaUpdate
+                                                ,history_date = datetime.today(),history_change_reason = "last",history_type = '+',history_user_id = 1)
+            history.save()'''
             return Response({'mensaje':'Se registros correctamente el tag'},status = status.HTTP_200_OK)
         else:
             return Response(tag_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
-    
+
     def update(self,request,pk=None):
         tag = self.get_queryset(pk).first()
         if tag:
             tag_serializer = self.serializer_class(tag , data = request.data)
             if tag_serializer.is_valid():
-                tag_serializer.save()
+                tagUpdate = tag_serializer.save()
+                #setHistory(tagUpdate,'actualizo tag',1)
                 return Response({'mensaje':'Se actualizo correctamente el tag'},status = status.HTTP_200_OK)
             return Response(tag_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
         return Response({'error':'No existe el tag'},status = status.HTTP_400_BAD_REQUEST)

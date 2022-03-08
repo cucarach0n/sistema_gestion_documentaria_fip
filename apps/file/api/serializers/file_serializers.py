@@ -13,7 +13,7 @@ class FileCreateSerializer(serializers.ModelSerializer):
         model = File
         exclude = ('extension','slug','contenidoOCR',)
 class FileFolderCreateSerializer(serializers.Serializer):
-    nombreDocumento = serializers.CharField(max_length=50)
+    nombreDocumento = serializers.CharField(max_length=250)
     documento_file = serializers.FileField()
     directorioslug = serializers.CharField(max_length=11)
     #unidadareaid = serializers.CharField()
@@ -75,6 +75,15 @@ class FileBuscarSerializer(serializers.Serializer):
         return data
     class Meta:
         model = File
+class FileHistorySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    #history_id = serializers.CharField()
+    history_date = serializers.DateTimeField()
+    history_change_reason = serializers.CharField()
+    history_type = serializers.CharField()
+    history_user_id = serializers.IntegerField()
+
+
 
 
 

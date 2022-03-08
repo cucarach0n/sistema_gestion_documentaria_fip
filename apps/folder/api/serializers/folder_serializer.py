@@ -108,3 +108,11 @@ class FolderUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Folder
         fields = ['nombre']
+
+class FolderHistorySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    #history_id = serializers.CharField()
+    history_date = serializers.DateTimeField()
+    history_change_reason = serializers.CharField()
+    history_type = serializers.CharField()
+    history_user_id = serializers.IntegerField()

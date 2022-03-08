@@ -1,9 +1,10 @@
+from datetime import datetime
 from apps.file.models import File
 from apps.folder.models import Folder
 from rest_framework.response import Response
 from rest_framework import status
 from apps.file.api.serializers.file_serializers import (
-    FileCreateSerializer,FileObtenerSerializer,FileFolderCreateSerializer,
+    FileCreateSerializer, FileHistorySerializer,FileObtenerSerializer,FileFolderCreateSerializer,
     FileDetalleSerializer,FileUpdateOcrSerializer,FileBuscarSerializer
     )
 from apps.file.api.serializers.general_serializers import File_Serializer,FileInFolder_Serializer
@@ -13,7 +14,7 @@ from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from rest_framework import viewsets
 from django.http import FileResponse
-from apps.base.util import DocumentoOCR
+from apps.base.util import DocumentoOCR, setHistory
 import threading
 import PyPDF2
 #import pdfplumber
@@ -24,14 +25,21 @@ from django.utils.crypto import get_random_string
 from django.db.models import Q
 from django.core.paginator import Paginator
 
-def guardarOcr(file,id):
+def guardarOcr(file,id,idUser):
     documentoRenderisado = DocumentoOCR(file)
     text = str(documentoRenderisado.obtenerTexto())
     file = FileUpdateOcrSerializer(File.objects.filter(id = id).first(),data = {'contenidoOCR':text})
-    if file.is_valid():
-        file.save()
+    if file.is_valid():        
+        fileSave = file.save()
+        #set history file
+        setHistory(fileSave,'contenido OCR registrado',idUser)
 def extraerExtencion(Archivo):
-    extension = [["jpg","application/jpeg"],["png","application/png"],["xlsx","application/vnd.ms-excel"],["docx","application/msword"],["pptx","application/vnd.ms-powerpoint"],["pdf","application/pdf"]]
+    extension = [["jpg","application/jpeg"]
+                ,["png","application/png"]
+                ,["xlsx","application/vnd.ms-excel"]
+                ,["docx","application/msword"]
+                ,["pptx","application/vnd.ms-powerpoint"]
+                ,["pdf","application/pdf"]]
     ext,aplication = None,None
     for e in extension:
         if e[0] in Archivo:
@@ -95,7 +103,9 @@ class FileListViewSet(Authentication,viewsets.GenericViewSet):
         if documento:
             documento_serializer = self.get_serializer(documento,data = request.data)
             if documento_serializer.is_valid():
-                documento_serializer.save()
+                fileUpdate = documento_serializer.save()
+                #set history file
+                setHistory(fileUpdate,'actualizo file',self.userFull.id)
                 return Response({'mensaje':'Documento actualizado correctamente'},status = status.HTTP_200_OK)                
             return Response({'error':'hubo un error al actualizar los datos'},status = status.HTTP_400_BAD_REQUEST)
         return Response({'error':'No existe el documento'},status = status.HTTP_400_BAD_REQUEST)
@@ -121,29 +131,43 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
         if documento_serializer.is_valid():
             if Folder.objects.filter(slug = documento_serializer.validated_data['directorioslug'],unidadArea_id = self.userFull.unidadArea_id):
 
-                current_site = get_current_site(request).domain
+                #current_site = get_current_site(request).domain
                 ruta = settings.MEDIA_ROOT+'files/'
                 fs = FileSystemStorage(location=ruta)
                 file = fs.save(request.FILES['documento_file'].name.replace(" ","_"),request.FILES['documento_file'])
                 fileurl = fs.url(file)
                 
                 doc = fileurl[1:]
-                documento_serializer.validated_data['documento_file'] = doc
+                #documento_serializer.validated_data['documento_file'] = doc
+                #documento_serializer.validated_data['contenidoOCR'] = "test"
+                #documento = documento_serializer.save()
+                #set history unidadArea
+                #setHistory(documento,'registro file',self.userFull.id)
+                documento = File()
+                documento.nombreDocumento = documento_serializer.validated_data['nombreDocumento']
+                documento.documento_file = doc
 
-                documento = documento_serializer.save()
                 documento.extension,application = extraerExtencion(fileurl[1:])
                 documento.slug = get_random_string(length=11)
                 documento.unidadArea_id = self.userFull.unidadArea_id
-                mensaje = "Documento cargado exitosamente"
+                #mensaje = "Documento cargado exitosamente"
                 #documentoOcr = DocumentoOCR(fileurl)
                 textPDF = obtenerTextoPDF(fileurl)
                 documento.contenidoOCR = textPDF #documentoOcr.obtenerTexto()
-                if textPDF == "":
-                    mensaje = 'Documento cargado exitosamente, se estra procesando el contenido del archivo...' 
-                    threading_text = threading.Thread(target=guardarOcr,args=(fileurl,documento.id,))
-                    threading_text.start()
-                    print('Cantidad de threading : ',threading.active_count())
                 documento.save()
+                #set history unidadArea
+                setHistory(documento,'se registro el file',self.userFull.id)
+                if textPDF == "":
+                    #mensaje = 'Documento cargado exitosamente, se estra procesando el contenido del archivo...' 
+                    threading_text = threading.Thread(target=guardarOcr,args=(fileurl,documento.id,self.userFull.id,))
+                    threading_text.start()
+                    #print('Cantidad de threading : ',threading.active_count())
+                
+                #print(documento)
+                fileDetalleSerializer = FileDetalleSerializer(documento)
+                #print(fileDetalleSerializer)
+                #set history file
+                #setHistory(documento,'agrego datos del file',self.userFull.id)
                 parentID = Folder.objects.filter(slug = request.data['directorioslug']).first()
                 if parentID:
 
@@ -152,12 +176,18 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
                         'parent_folder':parentID.id#Folder.objects.filter(slug = request.data['directorioslug']).first().id
                     })
                     if fileinfoler_serializer.is_valid():
-                        fileinfoler_serializer.save()
-
+                        fileInFolderSave = fileinfoler_serializer.save()
+                        #set history fileinfolder
+                        setHistory(fileInFolderSave,'registro en el folder',self.userFull.id)
+                        #add history folder
+                        history = Folder.historical.create(id=parentID.id,history_date = datetime.today()
+                                                    ,history_change_reason = "Se agrego el file " + documento.documento_file.name
+                                                    ,history_type = "+", history_user_id = self.userFull.id )
+                        history.save()
                     '''threading_text = threading.Thread(target=guardarOcr,args=(fileurl,documento.id,))
                     threading_text.start()
                     print('Cantidad de threading : ',threading.active_count())'''
-                    return Response({'Mensaje':mensaje},status = status.HTTP_200_OK)
+                    return Response(fileDetalleSerializer.data,status = status.HTTP_200_OK)
                 #File.objects.filter(id = documento.id).delete()
                 return Response({'error':'La carpeta contenedora no existe'},status = status.HTTP_404_NOT_FOUND)
             return Response({'error':'La carpeta contenedora no existe'},status = status.HTTP_401_UNAUTHORIZED)       
@@ -195,6 +225,15 @@ class FileBuscarAPIView(Authentication,viewsets.GenericViewSet):
             return Response(fileBusqueda_serializer.data,status = status.HTTP_200_OK)
         else:
             return Response(file_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
+class FileHistoryAPIView(Authentication,viewsets.GenericViewSet):
+    serializer_class = FileHistorySerializer
+    def get_queryset(self,pk=None):
+        return File.historical.filter(id = pk,history_user_id=self.userFull.id)
+    
+    def retrieve(self,request,pk = None):
+        historyFile = self.get_queryset(File.objects.get(slug = pk).id)
+        fileHistorialSerializer = self.get_serializer(historyFile,many = True)
+        return Response(fileHistorialSerializer.data, status = status.HTTP_200_OK)
 
 def obtenerTextoPDF(file):
         text =""

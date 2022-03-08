@@ -1,9 +1,9 @@
+from datetime import datetime
 from rest_framework.renderers import JSONRenderer
 from rest_framework.authentication import get_authorization_header
 from apps.users.authentication import ExpiringTokenAuthentication
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.sites.shortcuts import get_current_site
 from django.urls import resolve
 from apps.users.models import User
 class Authentication(object):
@@ -39,6 +39,9 @@ class Authentication(object):
         #se encontro un token en la peticion
         
         if user is not None:
+            if self.userFull.is_superuser:
+                print('Administrador : '+ self.userFull.name )
+                print(request.path)
             print('Despachando peticion al usuario ' + user.name)
             '''
             if type(user) == str:
