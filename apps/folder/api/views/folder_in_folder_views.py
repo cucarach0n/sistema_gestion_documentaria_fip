@@ -37,13 +37,15 @@ class FolderInFolderViewSet(Authentication,viewsets.GenericViewSet):
             folderPadre = Folder.objects.filter(slug = folderInFolder_serializer.data['padreSlug'],unidadArea_id = self.userFull.unidadArea_id).first()
             if folderPadre:
                 folder_data ={
-                        'nombre':folderInFolder_serializer.validated_data['child_folder_name']
+                        'nombre':folderInFolder_serializer.validated_data['child_folder_name'],
+                        'scope':folderInFolder_serializer.validated_data['publico']
                 }
                 folderHijo = FolderListSerializer(data = folder_data,context = folderPadre)
                 
                 if folderHijo.is_valid():
                     folderHijo.validated_data['slug'] = get_random_string(length=11)
                     folderHijo.validated_data['unidadArea_id'] = self.userFull.unidadArea_id
+                    folderHijo.validated_data['user_id'] = self.userFull.id
                     fHijo = folderHijo.save()
                     folderInFolder_Serializer = FolderInFolder_Serializer(data = {
                                                                 'child_folder_name':fHijo.nombre.replace(" ","_"),

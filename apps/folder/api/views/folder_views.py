@@ -24,13 +24,13 @@ class FolderViewSet(Authentication,viewsets.GenericViewSet):
             return self.serializer_class().Meta.model.objects.filter(carpeta_hija__isnull =True,unidadArea_id = self.userFull.unidadArea_id)
         else:
             try:
+                
                 return self.serializer_class().Meta.model.objects.filter(slug = pk,unidadArea_id = self.userFull.unidadArea_id)
             except:
                 return None
     def list(self,request):
 
-        folders = FolderDirecotorioListSerializer(self.get_queryset(),many = True)
-
+        folders = FolderDirecotorioListSerializer(self.get_queryset(),many = True,context = {'userId':self.userFull.id,'userStaff': self.userFull.is_staff})
 
         '''
         arbol = []
@@ -68,14 +68,20 @@ class FolderViewSet(Authentication,viewsets.GenericViewSet):
         folder = self.get_queryset(pk)
         if folder:
             #print(folder.id)
-            folders = FolderDirecotorioListSerializer(folder,many = True)
-            return Response(folders.data,status = status.HTTP_200_OK)
+            folders = FolderDirecotorioListSerializer(folder,many = True,context = {'userId':self.userFull.id,'userStaff': self.userFull.is_staff})
+            if folder.first().scope == True:
+                return Response(folders.data,status = status.HTTP_200_OK)
+            elif folder.first().scope == False :
+                if folder.first().user_id == self.userFull.id:
+                    return Response(folders.data,status = status.HTTP_200_OK)
+            return Response({'error':'La carpeta solicitada es privada'},status = status.HTTP_400_BAD_REQUEST)
         return Response({'error':"El directorio no existe"},status = status.HTTP_400_BAD_REQUEST)
     def create(self,request):
         #if self.userFull.is_superuser == 1 :
         folder_serializer = self.serializer_class(data = request.data)
         if folder_serializer.is_valid():
             folder_serializer.validated_data['slug'] = get_random_string(length=11)
+            folder_serializer.validated_data['user_id'] = self.userFull.id
             #folder_serializer.validated_data['unidadArea'] = self.userFull.unidadArea_id
             '''try:
                 os.makedirs(settings.MEDIA_ROOT + "files/"  + folder_serializer.validated_data['slug'] , exist_ok=True)
@@ -130,6 +136,7 @@ class FolderHistoryAPIView(Authentication,viewsets.GenericViewSet):
         historyFolder = self.get_queryset(Folder.objects.get(slug = pk).id)
         folderHistorialSerializer = self.get_serializer(historyFolder,many = True)
         return Response(folderHistorialSerializer.data, status = status.HTTP_200_OK)
+
 
 
 

@@ -1,4 +1,5 @@
 from django.db import models
+from apps.users.models import User
 from simple_history.models import HistoricalRecords
 from apps.unidadArea.models import UnidadArea
 # Create your models here.
@@ -9,8 +10,9 @@ class Folder(models.Model):
     fechaCreacion = models.DateTimeField("Fecha de creacion",auto_now=True)
     fechaUpdate = models.DateTimeField("Fecha de actualizacion",auto_now_add=True)
     unidadArea = models.ForeignKey(UnidadArea,on_delete=models.CASCADE,null=True,blank=True)
-
-    historical = HistoricalRecords(excluded_fields=['slug','nombre','fechaCreacion','fechaUpdate','unidadArea',])
+    scope = models.BooleanField(default = True)
+    user = models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False)
+    historical = HistoricalRecords(excluded_fields=['slug','nombre','fechaCreacion','fechaUpdate','unidadArea','user',])
 
     @property
     def _history_user(self):

@@ -35,7 +35,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     unidadArea = models.ForeignKey(UnidadArea, on_delete=models.CASCADE,null =True,blank=True)
     is_active = models.BooleanField(default = True)
     is_staff = models.SmallIntegerField('Staff',null = True, default=1, blank = True)
-    historical = HistoricalRecords()
+    historical = HistoricalRecords(excluded_fields=['name','last_name','avatar','estado','unidadArea','is_active','is_staff','correo','password','last_login','is_superuser'])
     objects = UserManager()
 
     class Meta:
@@ -56,7 +56,7 @@ class Contrasena_reinicio(models.Model):
     fechaCambio = models.DateTimeField('Fecha de Cambio',auto_now = False,auto_now_add = True) 
     estado = models.SmallIntegerField('Estado del token',null = True, default=1, blank = False)
     usuario = models.ForeignKey("User", on_delete=models.CASCADE)
-    historical = HistoricalRecords()
+    historical = HistoricalRecords(excluded_fields=['correo','token','fechaCambio','estado','usuario',])
 
     @property
     def _history_user(self):

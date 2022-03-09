@@ -255,8 +255,8 @@ def obtenerTextoPDF(file):
             
             pdfReader = PyPDF2.PdfFileReader(pdfFileObj,  strict = False)
             
-            print(pdfReader.isEncrypted)
-            print(pdfReader.numPages)
+            #print(pdfReader.isEncrypted)
+            #print(pdfReader.numPages)
             #print(pdfReader.getPage(0).extractText())
             for x in range(0, pdfReader.numPages):
                 pageObj = pdfReader.getPage(x)

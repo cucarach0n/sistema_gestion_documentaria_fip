@@ -52,7 +52,7 @@ class FileDetalleSerializer(serializers.ModelSerializer):
             rutaLogica = "?"
             ruta = "?"
         
-        print(folder)
+        #print(folder)
         return{
             'nombre':instance.nombreDocumento,
             'nombreArchivo':instance.documento_file.name,

@@ -23,6 +23,7 @@ class unidadAreaCreateAPIView(Authentication,viewsets.GenericViewSet):
                     })
                 if folder_serializer.is_valid():
                     folder_serializer.validated_data['slug'] = get_random_string(length=11) 
+                    folder_serializer.validated_data['user_id'] = self.userFull.id 
                     folderSave = folder_serializer.save()
                     #set history unidadArea
                     setHistory(folderSave,'registro nuevo folder master',self.userFull.id)
