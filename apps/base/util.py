@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
@@ -40,6 +41,14 @@ def setHistory(model,razon,user):
     history = model.historical.filter(id = model.id).first()
     history.history_user_id = user
     history.history_change_reason = razon
+    history.save()
+
+'''history = fHijo.historical.create(id=folderPadre.id,history_date = datetime.today()
+                                                    ,history_change_reason = "Se agrego la carpeta " + fHijo.nombre.replace(" ","_") 
+                                                    ,history_type = "+", history_user_id = self.userFull.id )
+history.save()'''
+def createHistory(model,id,reason,type,userId):
+    history = model.historical.create(id=id,history_date = datetime.today(),history_change_reason=reason,history_type=type,history_user_id=userId)
     history.save()
 
 class DocumentoOCR():

@@ -62,7 +62,7 @@ class FileTag(models.Model):
 
     id = models.AutoField(primary_key=True)
     tag = models.ForeignKey(Tag,on_delete = models.CASCADE)
-    file = models.ForeignKey('File',on_delete = models.CASCADE)
+    file = models.ForeignKey('File',on_delete = models.CASCADE,related_name='filetag')
     fechaRegistro = models.DateTimeField("Fecha del registro",auto_now=True)
     fechaUpdate = models.DateTimeField("Fecha del registro",auto_now_add=True)
 

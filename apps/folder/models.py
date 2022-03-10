@@ -12,7 +12,7 @@ class Folder(models.Model):
     unidadArea = models.ForeignKey(UnidadArea,on_delete=models.CASCADE,null=True,blank=True)
     scope = models.BooleanField(default = True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False)
-    historical = HistoricalRecords(excluded_fields=['slug','nombre','fechaCreacion','fechaUpdate','unidadArea','user',])
+    historical = HistoricalRecords(excluded_fields=['slug','nombre','fechaCreacion','fechaUpdate','unidadArea','user','scope',])
 
     @property
     def _history_user(self):

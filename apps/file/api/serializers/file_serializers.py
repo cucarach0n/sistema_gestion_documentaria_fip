@@ -18,7 +18,10 @@ class FileFolderCreateSerializer(serializers.Serializer):
     directorioslug = serializers.CharField(max_length=11)
     #unidadareaid = serializers.CharField()
 
-    
+    def validate_nombreDocumento(self,value):
+        if File.objects.filter(nombreDocumento = value):
+            raise serializers.ValidationError("Ya existe un file con este nombre")
+        return value
 
     def create(self,validated_data):
         file = File(nombreDocumento = validated_data['nombreDocumento'],documento_file = validated_data['documento_file'])#,unidadArea_id=validated_data['unidadareaid'])
@@ -68,7 +71,7 @@ class FileDetalleSerializer(serializers.ModelSerializer):
         }
 class FileBuscarSerializer(serializers.Serializer):
     buscar = serializers.CharField(allow_blank=True)
-
+    opcion = serializers.IntegerField()
     def validate_buscar(self,value):
         return value
     def validate(self,data):
