@@ -12,12 +12,13 @@ from apps.users.api.serializers.user_serializers import UserTokenSerializer
 from django.contrib.auth import authenticate
 
 class UserToken(Authentication,APIView):
-
+    
     def post(self,request,*args,**kwargs):
         
         #print(self.user)
         #username = request.GET.get('username')
         #print(username)
+        #testTemplate()
         try:
             folder = Folder.objects.filter(carpeta_hija__isnull =True,unidadArea_id = self.userFull.unidadArea_id).first()
             #print(folder)

@@ -13,7 +13,8 @@ pytesseract.pytesseract.tesseract_cmd = config('TESSERACT_CMD_PATH')#r'C:\Progra
 #config('TESSERACT_CMD_PATH')
 def send_email(data):
     context = {'email':data['email'],'domain':data['domain']}
-    template = get_template(settings.TEMPLATE_DIRS[0].replace("\\","/")[:64] +'/templates/correo.html')#64 windows / 66 linux
+    #template = get_template(settings.TEMPLATE_DIRS[0].replace("\\","/")[:64] +'/templates/correo.html')#64 windows / 66 linux
+    template = get_template('correo.html')
     content = template.render(context)
     email = EmailMultiAlternatives(
         'Un correo de prueba',
