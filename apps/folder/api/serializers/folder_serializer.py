@@ -28,7 +28,7 @@ class FolderDetailSerializer(serializers.ModelSerializer):
 class FolderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Folder
-        exclude = ('id','fechaUpdate','fechaCreacion','slug')
+        exclude = ('id','fechaUpdate','fechaCreacion','slug','user',)
     def validate_nombre(self,value):
         #print(value)
         if Folder.objects.filter(nombre = value):    
@@ -133,3 +133,12 @@ class FolderHistorySerializer(serializers.Serializer):
     history_change_reason = serializers.CharField()
     history_type = serializers.CharField()
     history_user_id = serializers.IntegerField()
+
+class FolderBuscarSerializer(serializers.Serializer):
+    buscar = serializers.CharField(allow_blank=False)
+    def validate_buscar(self,value):
+        return value
+    def validate(self,data):
+        return data
+    class Meta:
+        model = Folder

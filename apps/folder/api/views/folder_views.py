@@ -3,6 +3,7 @@ from apps.folder.models import Folder
 from rest_framework.response import Response
 from rest_framework import status
 from apps.folder.api.serializers.folder_serializer import (
+    FolderBuscarSerializer,
     FolderSerializer,
     FolderDirecotorioListSerializer,
     FolderDeleteSerializer,
@@ -14,7 +15,7 @@ import os
 from django.conf import settings
 from rest_framework import viewsets
 from django.utils.crypto import get_random_string  
-
+from django.db.models import Q
 
 class FolderViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = FolderSerializer
@@ -136,6 +137,21 @@ class FolderHistoryAPIView(Authentication,viewsets.GenericViewSet):
         historyFolder = self.get_queryset(Folder.objects.get(slug = pk).id)
         folderHistorialSerializer = self.get_serializer(historyFolder,many = True)
         return Response(folderHistorialSerializer.data, status = status.HTTP_200_OK)
+
+class FolderBuscarAPIView(Authentication,viewsets.GenericViewSet):
+    serializer_class = FolderBuscarSerializer
+    def get_queryset(self, buscar):
+        return self.serializer_class().Meta.model.objects.filter(Q(nombre__icontains = buscar),carpeta_hija__isnull =True,unidadArea_id = self.userFull.unidadArea_id).distinct()
+
+    def create(self,request):
+        folder_serializer = self.get_serializer(data = request.data)
+        if folder_serializer.is_valid():
+            folders = FolderDirecotorioListSerializer(self.get_queryset(request.data['buscar']),many = True,context = {'userId':self.userFull.id,'userStaff': self.userFull.is_staff})
+            return Response(folders.data,status = status.HTTP_200_OK)
+        else:
+            return Response(folder_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
+        
+    
 
 
 

@@ -9,8 +9,29 @@ import pytesseract
 from pdf2image import convert_from_path
 from apps.folder.models import FolderInFolder
 from django.utils.crypto import get_random_string
-pytesseract.pytesseract.tesseract_cmd = config('TESSERACT_CMD_PATH')#r'C:\Program Files\Tesseract-OCR\tesseract'
+import platform
+
+import unicodedata
+from django.core.files.storage import FileSystemStorage
+
+sistema = platform.system()
+if(sistema == "Windows"):
+    print("Sistema actual: Windows")
+    pytesseract.pytesseract.tesseract_cmd = config('TESSERACT_CMD_PATH')#r'C:\Program Files\Tesseract-OCR\tesseract'
+else:
+    print("Sistema actual: Linux")
 #config('TESSERACT_CMD_PATH')
+
+
+
+class ASCIIFileSystemStorage(FileSystemStorage):
+    """
+    Convert unicode characters in name to ASCII characters.
+    """
+    def get_valid_name(self, name):
+        name = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore')
+        return super(ASCIIFileSystemStorage, self).get_valid_name(name)
+
 def send_email(data):
     context = {'email':data['email'],'domain':data['domain']}
     #template = get_template(settings.TEMPLATE_DIRS[0].replace("\\","/")[:64] +'/templates/correo.html')#64 windows / 66 linux
@@ -27,6 +48,7 @@ def send_email(data):
     email.send()
     return content
 def obtenerRuta(padreId,ruta,logico):
+        
         #si el padre es null
         folderinfolder = FolderInFolder.objects.filter(child_folder_id = padreId).select_related('child_folder').first()
         if folderinfolder:
@@ -61,11 +83,17 @@ class DocumentoOCR():
         print('Documento : ' + doc)
         absURl = settings.MEDIA_ROOT +'files'  + doc
         print('obteniendo texto de ' + absURl)
-        pages = convert_from_path(
-            absURl,
-            thread_count=8,
-            poppler_path=config('POPPLER_PATH_WINDOWS')
-        )
+        if(sistema == "Windows"):
+            pages = convert_from_path(
+                absURl,
+                thread_count=8,
+                poppler_path=config('POPPLER_PATH_WINDOWS')
+            )
+        else:
+            pages = convert_from_path(
+                absURl,
+                thread_count=8
+            )
 
         image_counter = 1
         imagenesRutas = []
@@ -96,6 +124,6 @@ class DocumentoOCR():
             print(str(round(percent,2)) + " %")
             textGenerado += text
         
-        print('devolviendo texto')
+        print('contenido extraido por el OCR exitosamente!')
         return textGenerado
         #return 'test'

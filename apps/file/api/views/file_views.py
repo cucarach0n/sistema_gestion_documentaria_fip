@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from datetime import datetime
 from apps.file.models import File
 from apps.folder.models import Folder
@@ -162,7 +163,10 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
                 #current_site = get_current_site(request).domain
                 ruta = settings.MEDIA_ROOT+'files/'
                 fs = FileSystemStorage(location=ruta)
-                file = fs.save(request.FILES['documento_file'].name.replace(" ","_"),request.FILES['documento_file'])
+                nameFile = request.FILES['documento_file'].name
+                print(nameFile)
+                print('guardando')
+                file = fs.save(nameFile.replace(" ","_"),request.FILES['documento_file'])
                 fileurl = fs.url(file)
                 
                 doc = fileurl[1:]
@@ -172,8 +176,9 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
                 #set history unidadArea
                 #setHistory(documento,'registro file',self.userFull.id)
                 documento = File()
+                print(doc)
                 documento.nombreDocumento = documento_serializer.validated_data['nombreDocumento']
-                documento.documento_file = doc
+                documento.documento_file = nameFile
 
                 documento.extension,application = extraerExtencion(fileurl[1:])
                 documento.slug = get_random_string(length=11)
@@ -252,7 +257,12 @@ class FileBuscarAPIView(Authentication,viewsets.GenericViewSet):
 
         elif data['opcion'] == 3:
             return self.get_serializer().Meta.model.objects.filter(etiqueta__nombre__icontains = data['buscar'],unidadArea_id = self.userFull.unidadArea_id)
-
+        elif data['opcion'] == 4:
+            return self.get_serializer().Meta.model.objects.filter(Q(nombreDocumento__icontains = data['buscar'])| 
+                                                                Q(contenidoOCR__icontains = data['buscar'])| 
+                                                                Q(filetag__tag__tagName__icontains = data['buscar'])| 
+                                                                Q(etiqueta__nombre__icontains = data['buscar'])
+                                                                ,unidadArea_id = self.userFull.unidadArea_id).distinct()
     def create(self,request):
         file_serializer = self.get_serializer(data = request.data)
         if file_serializer.is_valid():

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from apps.folder.models import FolderInFolder
 from apps.unidadArea.models import UnidadArea
 from rest_framework import serializers
@@ -8,6 +9,7 @@ from apps.base.util import obtenerRuta
 from hurry.filesize import size, si
 from apps.tag.api.serializers.tag_serializer import TagListSerializer
 from apps.tag.models import Tag
+from decouple import config
 class FileCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
@@ -64,7 +66,7 @@ class FileDetalleSerializer(serializers.ModelSerializer):
             'extension':instance.extension,
             'rutaLogica': rutaLogica,
             'rutaSlug':ruta,
-            'url':"http://150.230.71.234/file/ver/"+instance.slug+"/",
+            'url':"{0}/file/ver/{1}/".format(config("URL_SERVER"),instance.slug),
             'tags':tag_serializer.data,
             'fechaCreacion':fileinfolder.fechaCreacion,
             'fechaUpdate':fileinfolder.fechaUpdate
