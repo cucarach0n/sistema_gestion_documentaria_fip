@@ -44,13 +44,13 @@ BASE_APPS = [
 #'apps.sgdapi',
 LOCAL_APPS =[
     'apps.base',
-    'apps.historialAccion',
     'apps.folder',
     'apps.tag',
     'apps.unidadArea',
     'apps.etiqueta',
     'apps.file',
-    'apps.users'
+    'apps.users',
+    'apps.share',
 ]
 
 THIRD_APPS = [

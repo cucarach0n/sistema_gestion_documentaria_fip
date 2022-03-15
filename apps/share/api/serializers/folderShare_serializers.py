@@ -1,0 +1,33 @@
+from apps.base.util import validarPrivado
+from apps.folder.models import Folder, FolderInFolder
+from apps.users.models import User
+from rest_framework import serializers
+from apps.share.models import FolderShare
+
+class FolderShareCreateSerializer(serializers.Serializer):
+    #history_id = serializers.CharField()
+    slugFolder = serializers.CharField()
+    correoTo = serializers.CharField()
+    def validate_correoTo(self,value):
+        userResult = User.objects.filter(correo = value).first()
+        if userResult:
+            if not userResult.id == int(self.context['userId']):
+                return userResult.id
+            raise serializers.ValidationError('Seleccione otro usuario a enviar el folder') 
+        raise serializers.ValidationError('El usuario a compartir no existe!')        
+        
+    def validate_slugFolder(self,value):
+        folderResult = Folder.objects.filter(slug=value, unidadArea_id = self.context['unidadId']).first()
+        if folderResult:
+            if validarPrivado(folderResult,self.context['userId']):
+                raise serializers.ValidationError('La carpeta es privada , no se puede compartir') 
+            elif not FolderInFolder.objects.filter(child_folder_id = folderResult.id):
+                raise serializers.ValidationError('Esta carpeta no se puede compartir')
+            return folderResult.id
+        
+        raise serializers.ValidationError('No existe la carpeta') 
+class FolderShareValidateCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FolderShare
+        fields = ['userFrom','userTo','folder']
+        

@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
 from apps.file.models import File
 from apps.folder.models import Folder
 from rest_framework.response import Response
 from rest_framework import status
 from apps.file.api.serializers.file_serializers import (
     FileCreateSerializer, FileHistorySerializer,FileObtenerSerializer,FileFolderCreateSerializer,
-    FileDetalleSerializer,FileUpdateOcrSerializer,FileBuscarSerializer
+    FileDetalleSerializer,FileUpdateOcrSerializer,FileBuscarSerializer, FileUpdateSerializer
     )
 from apps.file.api.serializers.general_serializers import File_Serializer,FileInFolder_Serializer
 from apps.users.authenticacion_mixings import Authentication
-from django.contrib.sites.shortcuts import get_current_site
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from rest_framework import viewsets
 from django.http import FileResponse
-from apps.base.util import DocumentoOCR, createHistory, setHistory
+from apps.base.util import DocumentoOCR, createHistory, setHistory, validarPrivado
 import threading
 import PyPDF2
+import pathlib
+
 #import pdfplumber
 #from apps.base.pdfConvertPdfMiner import extrarText
 from django.utils.crypto import get_random_string
@@ -53,29 +53,33 @@ def extraerExtencion(Archivo):
                 ,["mp4","audio/mp4"]
                 ,["mpeg","video/mpeg"]
                 ]'''
-    extension = [["jpg","image/jpeg"]
-                ,["jpeg","image/jpeg"]
-                ,["png","image/png"]
-                ,["gif","image/gif"]
-                ,["pdf","application/pdf"]
-                ,["txt","text/plain"]
-                ,["mp4","video/mp4"]
-                ,["mpeg","video/mpeg"]
-                ,["xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
-                ,["xls","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
-                ,["docx","application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
-                ,["doc","application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
-                ,["pptx","application/vnd.openxmlformats-officedocument.presentationml.presentation"]
-                ,["zip","application/x-zip-compressed"]
-                ,["rar","application/x-rar-compressed"]
+    extension = [[".jpg","image/jpeg"]
+                ,[".jpeg","image/jpeg"]
+                ,[".png","image/png"]
+                ,[".gif","image/gif"]
+                ,[".pdf","application/pdf"]
+                ,[".txt","text/plain"]
+                ,[".mp4","video/mp4"]
+                ,[".mpeg","video/mpeg"]
+                ,[".xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
+                ,[".xls","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
+                ,[".docx","application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+                ,[".doc","application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+                ,[".pptx","application/vnd.openxmlformats-officedocument.presentationml.presentation"]
+                ,[".zip","application/x-zip-compressed"]
+                ,[".rar","application/x-rar-compressed"]
                 ]
+    path = pathlib.Path(settings.MEDIA_ROOT+'files/' + Archivo)
     ext,aplication = None,None
     for e in extension:
-        if e[0] in Archivo.lower():
-            ext = e[0]
+        if e[0] in ''.join(path.suffixes):
+            ext = e[0][1:]
             aplication =e[1]
-    return ext,aplication 
-
+            return ext,aplication      
+    if ext == None:
+        ext =''.join(path.suffixes)[1:]
+        aplication = ''
+        return ext,aplication
 class FileObtenerViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = FileObtenerSerializer
     def get_queryset(self,pk=None):
@@ -86,10 +90,14 @@ class FileObtenerViewSet(Authentication,viewsets.GenericViewSet):
     def retrieve(self,request,pk=None):
 
         documento_query = self.get_queryset(pk)
+        if validarPrivado(documento_query,self.userFull.id,True):
+            return Response({'error':'La carpeta contenedora o el file son privados'},status = status.HTTP_401_UNAUTHORIZED)
+        '''if not(documento_query.scope == False and documento_query.user_id == self.userFull.id):
+            return Response({'error':'El archivo solicitado es privado'},status = status.HTTP_401_UNAUTHORIZED)'''
         if documento_query:
             documento = File_Serializer().Meta.model.objects.filter(slug=pk,unidadArea_id = self.userFull.unidadArea_id).first()
             if documento:
-               
+                print('Sirviendo file {0} al usuario {1}'.format(documento.documento_file.name,self.userFull.correo))
                 doc = str(documento.documento_file)#56 en linux / 34 windows
                 file_location =  settings.MEDIA_ROOT + 'files/' + doc 
                 try:    
@@ -98,46 +106,58 @@ class FileObtenerViewSet(Authentication,viewsets.GenericViewSet):
                     file_data = open(file_location, 'rb')
                     # sending response 
                     ext,app = extraerExtencion(str(documento.documento_file))#56 en linux/ 34 windows
+                    
                     response = FileResponse(file_data, content_type=app)
                 
                     #response['Content-Length'] = file_data.size
                     response['Content-Disposition'] = 'attachment; filename="'+str(documento.documento_file)+'"'#56 en linux/ 34 windows
+                    #create history
+                    createHistory(File,documento.id,"Documento " + documento.documento_file.name + " visto","v",self.userFull.id)
                 except:
                     # handle file not exist case here
                     response = Response({'error':'Hubo un error al obtener el archivo'},status = status.HTTP_400_BAD_REQUEST)
                 return response
-            response = Response({'error':'No existe el documento o archivo solicitado'},status = status.HTTP_400_BAD_REQUEST)
+            response = Response({'error':'No existe el documento o archivo solicitado'},status = status.HTTP_404_NOT_FOUND)
         
         return Response({'error':'Error al procesar la solicitud'},status = status.HTTP_400_BAD_REQUEST)
 
 class FileListViewSet(Authentication,viewsets.GenericViewSet):
-    serializer_class = FileFolderCreateSerializer
+    serializer_class = FileUpdateSerializer
 
     def get_queryset(self,pk=None):
         if pk is None:
-            return FileDetalleSerializer.Meta.model.objects.filter(unidadArea_id = self.userFull.unidadArea_id)
+            return FileDetalleSerializer.Meta.model.objects.filter(Q(user_id= self.userFull.id,scope = False,unidadArea_id = self.userFull.unidadArea_id)
+                                                                |Q(scope = True,unidadArea_id = self.userFull.unidadArea_id)).distinct()
         return FileDetalleSerializer.Meta.model.objects.filter(slug=pk,unidadArea_id = self.userFull.unidadArea_id).first()
     def list(self,request):
-
-        print(self.userFull.unidadArea_id)
         documento_serializer = FileDetalleSerializer(self.get_queryset(),many = True)
         return Response(documento_serializer.data,status = status.HTTP_200_OK)
     def retrieve(self,request,pk=None):
-        documento = FileDetalleSerializer(self.get_queryset(pk))
-        if documento:
-            return Response(documento.data,status=status.HTTP_200_OK)
+        documentoSerializer = FileDetalleSerializer(self.get_queryset(pk))
+        if documentoSerializer:
+            docResult = self.get_queryset(pk)
+            if validarPrivado(self.get_queryset(pk),self.userFull.id,True):
+                return Response({'error':'La carpeta contenedora o el file son privados'},status = status.HTTP_401_UNAUTHORIZED)
+            '''if not(documento.scope == False and documento.user_id == self.userFull.id):
+                return Response(documento.data,status=status.HTTP_200_OK)
+            return Response({'error':'El archivo solicitado es privado'},status = status.HTTP_401_UNAUTHORIZED)'''
+            #create history
+            createHistory(File,docResult.id,"Obteniendo documento " + docResult.documento_file.name,"o",self.userFull.id)
+            return Response(documentoSerializer.data,status=status.HTTP_200_OK)
         return Response({'error':'No existe el documento solicitado'},status = status.HTTP_404_NOT_FOUND)
     def update(self,request,pk=None):
         documento = self.get_queryset(pk)
         if documento:
+            if validarPrivado(documento,self.userFull.id,True):
+                return Response({'error':'La carpeta contenedora o el file son privados'},status = status.HTTP_401_UNAUTHORIZED)
             documento_serializer = self.get_serializer(documento,data = request.data)
             if documento_serializer.is_valid():
                 fileUpdate = documento_serializer.save()
                 #set history file
                 setHistory(fileUpdate,'actualizo file',self.userFull.id)
-                return Response({'mensaje':'Documento actualizado correctamente'},status = status.HTTP_200_OK)                
+                return Response({'mensaje':'Documento actualizado correctamente'},status = status.HTTP_200_OK) 
             return Response({'error':'hubo un error al actualizar los datos'},status = status.HTTP_400_BAD_REQUEST)
-        return Response({'error':'No existe el documento'},status = status.HTTP_400_BAD_REQUEST)
+        return Response({'error':'No existe el documento'},status = status.HTTP_404_NOT_FOUND)
 class FileViewSet(Authentication,viewsets.GenericViewSet):
     
     serializer_class = FileFolderCreateSerializer
@@ -158,28 +178,33 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
         documento_serializer = self.serializer_class(data = request.data)
         
         if documento_serializer.is_valid():
-            if Folder.objects.filter(slug = documento_serializer.validated_data['directorioslug'],unidadArea_id = self.userFull.unidadArea_id):
+            folderResult = Folder.objects.filter(slug = documento_serializer.validated_data['directorioslug'],unidadArea_id = self.userFull.unidadArea_id)
+            if validarPrivado(folderResult.first(),self.userFull.id):
+                return Response({'error':'La carpeta solicitada es privada'},status = status.HTTP_401_UNAUTHORIZED)
+            '''padrePrivate = obtenerRuta(folderResult.first().id,[folderResult.first().nombre],True,False,True,self.userFull.id)
+            if padrePrivate:
+                return Response({'error':'La carpeta es privada'},status = status.HTTP_401_UNAUTHORIZED)
+            elif folderResult.first().scope == False:
+                if not(folderResult.first().user_id == self.userFull.id):
+                    return Response({'error':'La carpeta es privada'},status = status.HTTP_401_UNAUTHORIZED)'''
+            if folderResult:
 
                 #current_site = get_current_site(request).domain
                 ruta = settings.MEDIA_ROOT+'files/'
                 fs = FileSystemStorage(location=ruta)
-                nameFile = request.FILES['documento_file'].name
-                print(nameFile)
-                print('guardando')
-                file = fs.save(nameFile.replace(" ","_"),request.FILES['documento_file'])
+                nameFile = request.FILES['documento_file'].name.replace(" ","_")
+                file = fs.save(nameFile,request.FILES['documento_file'])
                 fileurl = fs.url(file)
-                
-                doc = fileurl[1:]
                 #documento_serializer.validated_data['documento_file'] = doc
                 #documento_serializer.validated_data['contenidoOCR'] = "test"
                 #documento = documento_serializer.save()
                 #set history unidadArea
                 #setHistory(documento,'registro file',self.userFull.id)
                 documento = File()
-                print(doc)
                 documento.nombreDocumento = documento_serializer.validated_data['nombreDocumento']
-                documento.documento_file = nameFile
-
+                documento.documento_file = fileurl[1:]
+                documento.user_id = self.userFull.id
+                documento.scope = documento_serializer.validated_data['publico']
                 documento.extension,application = extraerExtencion(fileurl[1:])
                 documento.slug = get_random_string(length=11)
                 documento.unidadArea_id = self.userFull.unidadArea_id
@@ -224,7 +249,7 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
                     return Response(fileDetalleSerializer.data,status = status.HTTP_200_OK)
                 #File.objects.filter(id = documento.id).delete()
                 return Response({'error':'La carpeta contenedora no existe'},status = status.HTTP_404_NOT_FOUND)
-            return Response({'error':'La carpeta contenedora no existe'},status = status.HTTP_401_UNAUTHORIZED)       
+            return Response({'error':'La carpeta contenedora no es accesible para su usuario'},status = status.HTTP_401_UNAUTHORIZED)       
         else:
             #return Response({'Error':'no se pudo cargar el documento'},status = status.HTTP_400_BAD_REQUEST)
             return Response(documento_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
@@ -277,6 +302,8 @@ class FileHistoryAPIView(Authentication,viewsets.GenericViewSet):
     
     def retrieve(self,request,pk = None):
         historyFile = self.get_queryset(File.objects.get(slug = pk).id)
+        '''if validarPrivado(historyFile.first(),self.userFull.id,True):
+            return Response({'error':'La carpeta contenedora o el file son privados'},status = status.HTTP_401_UNAUTHORIZED)'''
         fileHistorialSerializer = self.get_serializer(historyFile,many = True)
         return Response(fileHistorialSerializer.data, status = status.HTTP_200_OK)
 

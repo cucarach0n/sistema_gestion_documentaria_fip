@@ -1,5 +1,5 @@
 from datetime import datetime
-from apps.base.util import setHistory
+from apps.base.util import obtenerRuta, setHistory, validarPrivado
 from rest_framework.response import Response
 from rest_framework import status
 from apps.folder.api.serializers.folder_in_folder_serializer import FolderInFolderValidateCreateSerializer
@@ -24,7 +24,7 @@ class FolderInFolderViewSet(Authentication,viewsets.GenericViewSet):
 
     def get_queryset(self):
         return self.serializer_class().Meta.model.objects.all()
-    
+    #pendiente quitar
     def list(self,request):
         folders = self.serializer_class(self.get_queryset(),many = True)
         return Response(folders.data,status = status.HTTP_200_OK)
@@ -35,6 +35,14 @@ class FolderInFolderViewSet(Authentication,viewsets.GenericViewSet):
         folderInFolder_serializer = self.serializer_class(data = request.data,context = request.data)
         if folderInFolder_serializer.is_valid():
             folderPadre = Folder.objects.filter(slug = folderInFolder_serializer.data['padreSlug'],unidadArea_id = self.userFull.unidadArea_id).first()
+            if validarPrivado(folderPadre,self.userFull.id):
+                return Response({'error':'La carpeta es privada'},status = status.HTTP_401_UNAUTHORIZED)
+            '''padrePrivate = obtenerRuta(folderPadre.id,[folderPadre.nombre],True,False,True,self.userFull.id)
+            if padrePrivate:
+                return Response({'error':'La carpeta es privada'},status = status.HTTP_401_UNAUTHORIZED)
+            elif folderPadre.scope == False:
+                if not(folderPadre.user_id == self.userFull.id):
+                    return Response({'error':'La carpeta es privada'},status = status.HTTP_401_UNAUTHORIZED)'''
             if folderPadre:
                 folder_data ={
                         'nombre':folderInFolder_serializer.validated_data['child_folder_name'],

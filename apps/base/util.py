@@ -2,14 +2,16 @@ from datetime import datetime
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
+from apps.share.models import FolderShare
 from decouple import config
 from os import remove
 from PIL import Image, ImageEnhance, ImageFilter
 import pytesseract
 from pdf2image import convert_from_path
-from apps.folder.models import FolderInFolder
+from apps.folder.models import Folder, FolderInFolder
 from django.utils.crypto import get_random_string
 import platform
+from django.db.models import Q
 
 import unicodedata
 from django.core.files.storage import FileSystemStorage
@@ -47,19 +49,76 @@ def send_email(data):
     email.attach_alternative(content,'text/html')
     email.send()
     return content
-def obtenerRuta(padreId,ruta,logico):
+def obtenerRuta(padreId,ruta,logico,privado = False,getPrivate = False,userId = None):
         
         #si el padre es null
         folderinfolder = FolderInFolder.objects.filter(child_folder_id = padreId).select_related('child_folder').first()
         if folderinfolder:
+            #print(folderinfolder.parent_folder.scope)
+            if getPrivate:
+                if not privado:
+                    if folderinfolder.parent_folder.scope == False:
+                        if folderinfolder.parent_folder.user_id == userId:
+                            privado = False
+                        else:
+                            privado = True
             if logico:
                 ruta.append(folderinfolder.parent_folder.nombre) 
             else:
                 ruta.append(folderinfolder.parent_folder.slug) 
-            obtenerRuta(folderinfolder.parent_folder_id,ruta,logico )
-        return ' > '.join(ruta[::-1])
-
-
+            obtenerRuta(folderinfolder.parent_folder_id,ruta,logico,privado,getPrivate)
+        #print(privado)
+        if getPrivate:
+            return privado
+        else:
+            return ' > '.join(ruta[::-1])
+def validarCompartido(foldeSlug,compartido = False,userId = None):
+    folderinfolder = FolderInFolder.objects.filter(child_folder__slug = foldeSlug).select_related('child_folder').first()
+    if folderinfolder:
+        
+        if not compartido:
+            '''folderShareResultSame = FolderShare.objects.filter(folder_id = folderinfolder.child_folder.id).select_related('folder').first()
+            if folderShareResultSame:
+                if folderShareResultSame.estado == True and folderShareResultSame.userTo_id == userId:
+                    return True
+            folderShareResult = FolderShare.objects.filter(folder_id = folderinfolder.parent_folder.id).select_related('folder').first()
+            if folderShareResult:
+                print('folder share es ' + folderShareResult.folder.nombre + ', estado '+ str(folderShareResult.estado))
+                if folderShareResult.estado == True:
+                    if folderShareResult.userTo_id == userId:
+                        compartido = True
+                    else:
+                        compartido = False'''
+            folderShareResult = FolderShare.objects.filter(Q(folder_id = folderinfolder.parent_folder.id)
+                                                        |Q(folder_id = folderinfolder.child_folder.id)
+                                                        ,estado =True,userTo_id = userId).select_related('folder').distinct().first()
+            if folderShareResult:
+                compartido = True
+            else:
+                compartido = False
+            
+        print(folderinfolder.parent_folder.slug)
+        validarCompartido(folderinfolder.parent_folder_id,compartido,userId)
+        
+    return compartido
+def validarPrivado(modelo,userId,is_file = False):
+    if is_file:
+        if modelo.scope ==False:
+            if not(modelo.user_id == userId):
+                #devolver True por que el file esta oculto
+                return True
+        folder = Folder.objects.filter(fileinfolder__file = modelo).first()
+    else:
+        folder = modelo
+        
+    privado = False
+    padrePrivate = obtenerRuta(folder.id,[folder.nombre],True,False,True,userId)
+    if padrePrivate:
+        privado = True
+    elif folder.scope == False:
+        if not(folder.user_id == userId):
+            privado = True
+    return privado
 def setHistory(model,razon,user):
     history = model.historical.filter(id = model.id).first()
     history.history_user_id = user

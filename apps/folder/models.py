@@ -50,4 +50,4 @@ class FolderInFolder(models.Model):
         verbose_name_plural = 'Folder en folders'
     
     def __str__(self):
-        return "{0},{1}".format(self.child_folder_name,self.slug)
+        return "{0},{1}".format(self.child_folder_name,self.fechaCreacion)

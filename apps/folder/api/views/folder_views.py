@@ -1,4 +1,5 @@
 
+from apps.base.util import createHistory, setHistory, validarPrivado
 from apps.folder.models import Folder
 from rest_framework.response import Response
 from rest_framework import status
@@ -11,8 +12,6 @@ from apps.folder.api.serializers.folder_serializer import (
     FolderHistorySerializer
     )
 from apps.users.authenticacion_mixings import Authentication
-import os
-from django.conf import settings
 from rest_framework import viewsets
 from django.utils.crypto import get_random_string  
 from django.db.models import Q
@@ -67,16 +66,25 @@ class FolderViewSet(Authentication,viewsets.GenericViewSet):
         return Response(folders.data,status = status.HTTP_200_OK)
     def retrieve(self,request,pk=None):
         folder = self.get_queryset(pk)
+        if validarPrivado(folder.first(),self.userFull.id):
+                return Response({'error':'La carpeta solicitada es privada'},status = status.HTTP_401_UNAUTHORIZED)
+
         if folder:
             #print(folder.id)
+            #create history
+            createHistory(Folder,folder.first().id,"Obteniendo carpeta "+ folder.first().nombre,"o",self.userFull.id)
             folders = FolderDirecotorioListSerializer(folder,many = True,context = {'userId':self.userFull.id,'userStaff': self.userFull.is_staff})
-            if folder.first().scope == True:
-                return Response(folders.data,status = status.HTTP_200_OK)
-            elif folder.first().scope == False :
-                if folder.first().user_id == self.userFull.id:
+            '''padrePrivate = obtenerRuta(folder.first().id,[folder.first().nombre],True,False,True,self.userFull.id)
+            if not padrePrivate:
+                if folder.first().scope == True:
                     return Response(folders.data,status = status.HTTP_200_OK)
-            return Response({'error':'La carpeta solicitada es privada'},status = status.HTTP_400_BAD_REQUEST)
+                elif folder.first().scope == False :
+                    if folder.first().user_id == self.userFull.id:
+                        return Response(folders.data,status = status.HTTP_200_OK)
+            return Response({'error':'La carpeta solicitada es privada'},status = status.HTTP_401_UNAUTHORIZED)'''
+            return Response(folders.data,status = status.HTTP_200_OK)
         return Response({'error':"El directorio no existe"},status = status.HTTP_400_BAD_REQUEST)
+    #pendiente quitar
     def create(self,request):
         #if self.userFull.is_superuser == 1 :
         folder_serializer = self.serializer_class(data = request.data)
@@ -110,7 +118,7 @@ class FolderDeleteAPIView(Authentication,viewsets.GenericViewSet):
                 folderDeleteResult.delete()
                 return Response({'Mensaje':'Folder eliminado correctamente'},status = status.HTTP_200_OK)
             else:
-                return Response({'Error':'No permitido'},status = status.HTTP_400_BAD_REQUEST)  
+                return Response({'Error':'No permitido'},status = status.HTTP_401_UNAUTHORIZED)  
         else:
             return Response(folderSerializer.errors,status = status.HTTP_400_BAD_REQUEST) 
 class FolderUpdateAPIView(Authentication,viewsets.GenericViewSet):
@@ -118,21 +126,37 @@ class FolderUpdateAPIView(Authentication,viewsets.GenericViewSet):
     def get_queryset(self,pk = None):
         return self.get_serializer().Meta.model.objects.filter(slug = pk).first()
     def update(self,request,pk = None):
-        if self.get_queryset(pk):
+        folderResult = self.get_queryset(pk)
+        if validarPrivado(folderResult,self.userFull.id):
+                return Response({'error':'La carpeta solicitada es privada'},status = status.HTTP_401_UNAUTHORIZED)
+        '''padrePrivate = obtenerRuta(folderResult.id,[folderResult.nombre],True,False,True,self.userFull.id)
+        if padrePrivate:
+            return Response({'error':'La carpeta es privada'},status = status.HTTP_401_UNAUTHORIZED)
+        elif folderResult.scope == False:
+            if not(folderResult.user_id == self.userFull.id):
+                return Response({'error':'La carpeta es privada'},status = status.HTTP_401_UNAUTHORIZED)'''
+        if folderResult:
             folderUpdateSerializer = self.get_serializer(self.get_queryset(pk),data = request.data)
             if folderUpdateSerializer.is_valid():
-                folderUpdateSerializer.save()
+                folder = folderUpdateSerializer.save()
+                #set history subfolder
+                setHistory(folder,'datos del folder actualizado',self.userFull.id)
                 return Response({'Mensaje':'Folder actualizado correctamente'},status = status.HTTP_200_OK)
             else:
                 return Response(folderUpdateSerializer.errors,status = status.HTTP_400_BAD_REQUEST)
         else:
-             return Response({'Error':'El folder no existe'},status = status.HTTP_200_OK)
+            return Response({'Error':'El folder no existe'},status = status.HTTP_400_BAD_REQUEST)
 
 class FolderHistoryAPIView(Authentication,viewsets.GenericViewSet):
     serializer_class = FolderHistorySerializer
     def get_queryset(self,pk=None):
-        return Folder.historical.filter(id = pk,history_user_id=self.userFull.id)
-    
+        if pk is not None:
+            return Folder.historical.filter(id = pk,history_user_id=self.userFull.id)
+        return Folder.historical.filter(history_user_id=self.userFull.id)
+    def list(self,request):
+        historyFolder = self.get_queryset()
+        folderHistorialSerializer = self.get_serializer(historyFolder,many = True)
+        return Response(folderHistorialSerializer.data, status = status.HTTP_200_OK)
     def retrieve(self,request,pk = None):
         historyFolder = self.get_queryset(Folder.objects.get(slug = pk).id)
         folderHistorialSerializer = self.get_serializer(historyFolder,many = True)
@@ -141,7 +165,8 @@ class FolderHistoryAPIView(Authentication,viewsets.GenericViewSet):
 class FolderBuscarAPIView(Authentication,viewsets.GenericViewSet):
     serializer_class = FolderBuscarSerializer
     def get_queryset(self, buscar):
-        return self.serializer_class().Meta.model.objects.filter(Q(nombre__icontains = buscar),carpeta_hija__isnull =True,unidadArea_id = self.userFull.unidadArea_id).distinct()
+        #return self.serializer_class().Meta.model.objects.filter(Q(nombre__icontains = buscar),carpeta_hija__isnull =True,unidadArea_id = self.userFull.unidadArea_id).distinct()
+        return self.serializer_class().Meta.model.objects.filter(Q(nombre__icontains = buscar,scope = False,user_id = self.userFull.id)|Q(nombre__icontains = buscar,scope = True),carpeta_hija__isnull =True,unidadArea_id = self.userFull.unidadArea_id).distinct()
 
     def create(self,request):
         folder_serializer = self.get_serializer(data = request.data)

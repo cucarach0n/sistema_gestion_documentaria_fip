@@ -26,7 +26,7 @@ class UserToken(Authentication,APIView):
             #print(user_token.created)
             user = UserTokenSerializer(self.user)
             #set history user
-            #setHistory(user,"Solicitud token nuevo",user.id)
+            setHistory(user,"Solicitud token nuevo",user.id)
             return Response({
                 'token': user_token.key,
                 'user' : user.data,
@@ -132,6 +132,8 @@ class Logout(Authentication,APIView):
                 user_token.delete()            
                 session_message = 'Sesiones de usuario eliminadas.'
                 token_message = 'Token Eliminado'
+                #set history user
+                setHistory(self.userFull,"Cerro sesion",self.userFull.id)
                 return Response({'token_message':token_message,'session_message':session_message},status = status.HTTP_200_OK)   
             else:
                 return Response({'error':'No se ha encontrado un usuario con estas credenciales'},status = status.HTTP_400_BAD_REQUEST)

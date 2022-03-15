@@ -1,3 +1,4 @@
+from dataclasses import fields
 from rest_framework import serializers
 from apps.folder.models import Folder,FolderInFolder
 from apps.file.models import File
@@ -96,15 +97,24 @@ class FolderDirecotorioListSerializer(serializers.ModelSerializer):
         '''folder = FolderDetailSerializer(Folder.objects.filter(carpeta_hija__parent_folder_id = instance.id),many = True)'''
         #endbackup
         if int(self.context['userStaff']) < 3: 
-            folderQuery = Folder.objects.filter(Q(user_id = self.context['userId'],scope=False,carpeta_hija__parent_folder_id = instance.id) | Q(scope = True,carpeta_hija__parent_folder_id = instance.id)).distinct()
-        else:
+            folderQuery = Folder.objects.filter(Q(user_id = self.context['userId'],scope=False,carpeta_hija__parent_folder_id = instance.id) 
+                                                | Q(scope = True,carpeta_hija__parent_folder_id = instance.id)).distinct()
+            fileQuery = File.objects.filter(Q(user_id = self.context['userId'],scope = False,fileinfolder__parent_folder__id =instance.id)
+                                            |Q(scope = True,fileinfolder__parent_folder__id =instance.id)).distinct()
+        elif int(self.context['userStaff']) > 2 and int(self.context['userStaff']) < 5:
             folderQuery = Folder.objects.filter(carpeta_hija__parent_folder_id = instance.id)
+            fileQuery = files = FileDetalleSerializer(File.objects.filter(fileinfolder__parent_folder__id =instance.id),many = True,context = {'padre':instance.id})
+        elif int(self.context['userStaff']) == 5:
+            folderQuery = Folder.objects.filter(scope = True,carpeta_hija__parent_folder_id = instance.id)
+            fileQuery = File.objects.filter(scope = True,fileinfolder__parent_folder__id =instance.id)
         folder = FolderDetailSerializer(folderQuery,many = True)
-
-        files = FileDetalleSerializer(File.objects.filter(fileinfolder__parent_folder__id =instance.id),many = True,context = {'padre':instance.id})
+        
+        #files = FileDetalleSerializer(File.objects.filter(fileinfolder__parent_folder__id =instance.id),many = True,context = {'padre':instance.id})
+        files = FileDetalleSerializer(fileQuery,many = True,context = {'padre':instance.id})
         ruta = obtenerRuta(instance.id,[instance.slug],False)
         rutaLogica = obtenerRuta(instance.id,[instance.nombre],True)
-        treeArbolSerializer = TreeFolderSerializer(Folder.objects.filter(carpeta_hija__parent_folder_id = instance.id),many = True)
+        #treeArbolSerializer = TreeFolderSerializer(Folder.objects.filter(carpeta_hija__parent_folder_id = instance.id),many = True)
+        treeArbolSerializer = TreeFolderSerializer(folderQuery,many = True)
         return {
             'slug':instance.slug,
             'nombre':instance.nombre,
@@ -124,15 +134,31 @@ class FolderDeleteSerializer(serializers.ModelSerializer):
 class FolderUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Folder
-        fields = ['nombre']
+        fields = ['nombre','scope']
 
-class FolderHistorySerializer(serializers.Serializer):
+class FolderHistoryTestSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     #history_id = serializers.CharField()
     history_date = serializers.DateTimeField()
     history_change_reason = serializers.CharField()
     history_type = serializers.CharField()
     history_user_id = serializers.IntegerField()
+
+class FolderHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Folder.historical.model
+        fields = ['id','history_date','history_change_reason','history_type','history_user']
+    def to_representation(self,instance):
+        folderResult = Folder.objects.filter(id = instance.id).first()
+        return {
+            'folderName':folderResult.nombre,
+            'folderSlug':folderResult.slug,
+            'rutaLogica': obtenerRuta(folderResult.id,[folderResult.nombre],True),
+            'fechaCreacion' : instance.history_date,
+            'accion':instance.history_change_reason,
+            'tipo':instance.history_type,
+            'history_user':instance.history_user.id
+        }
 
 class FolderBuscarSerializer(serializers.Serializer):
     buscar = serializers.CharField(allow_blank=False)

@@ -18,6 +18,7 @@ class FileFolderCreateSerializer(serializers.Serializer):
     nombreDocumento = serializers.CharField(max_length=250)
     documento_file = serializers.FileField()
     directorioslug = serializers.CharField(max_length=11)
+    publico = serializers.BooleanField(default = True)
     #unidadareaid = serializers.CharField()
 
     def validate_nombreDocumento(self,value):
@@ -29,6 +30,10 @@ class FileFolderCreateSerializer(serializers.Serializer):
         file = File(nombreDocumento = validated_data['nombreDocumento'],documento_file = validated_data['documento_file'])#,unidadArea_id=validated_data['unidadareaid'])
         file.save()
         return file
+class FileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = File
+        fields = ['nombreDocumento','scope']
 
 class FileObtenerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -67,6 +72,7 @@ class FileDetalleSerializer(serializers.ModelSerializer):
             'rutaLogica': rutaLogica,
             'rutaSlug':ruta,
             'url':"{0}/file/ver/{1}/".format(config("URL_SERVER"),instance.slug),
+            'publico':instance.scope,
             'tags':tag_serializer.data,
             'fechaCreacion':fileinfolder.fechaCreacion,
             'fechaUpdate':fileinfolder.fechaUpdate
@@ -80,15 +86,30 @@ class FileBuscarSerializer(serializers.Serializer):
         return data
     class Meta:
         model = File
-class FileHistorySerializer(serializers.Serializer):
+'''class FileHistorySerializer(serializers.Serializer):
     id = serializers.IntegerField()
     #history_id = serializers.CharField()
     history_date = serializers.DateTimeField()
     history_change_reason = serializers.CharField()
     history_type = serializers.CharField()
-    history_user_id = serializers.IntegerField()
+    history_user_id = serializers.IntegerField()'''
 
-
+class FileHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = File.historical.model
+        fields = ['id','history_date','history_change_reason','history_type','history_user']
+    def to_representation(self,instance):
+        fileResult = File.objects.filter(id = instance.id).first()
+        folderResult = Folder.objects.filter(fileinfolder__file__id = fileResult.id).first()
+        return {
+            'fileName':fileResult.nombreDocumento,
+            'fileSlug':fileResult.slug,
+            'rutaLogica': obtenerRuta(folderResult.id,[folderResult.nombre],True),
+            'fechaCreacion' : instance.history_date,
+            'accion':instance.history_change_reason,
+            'tipo':instance.history_type,
+            'history_user':instance.history_user.id
+        }
 
 
 

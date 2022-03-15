@@ -26,7 +26,7 @@ from django.conf import settings
 schema_view = get_schema_view(
    openapi.Info(
       title="Sistema Gestion Documentaria API",
-      default_version='v0.1.1',
+      default_version='v0.2.0',
       description="Sistema para el almacenamiento masivo de archivos",
       terms_of_service="https://www.google.com/policies/terms/",
       contact=openapi.Contact(email="devalo19@gmail.com"),
@@ -50,6 +50,7 @@ urlpatterns = [
     path('tag/', include('apps.tag.api.routers')),
     path('unidadArea/', include('apps.unidadArea.api.routers')),
     path('etiqueta/', include('apps.etiqueta.api.routers')),
+    path('share/', include('apps.share.api.routers')),
 ] #+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

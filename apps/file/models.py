@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.db import models
+from apps.users.models import User
 from simple_history.models import HistoricalRecords
 
 from apps.tag.models import Tag
@@ -16,7 +17,9 @@ class File(models.Model):
     documento_file = models.FileField('Archivo del documento', upload_to="",blank = False,null = False)
     extension = models.CharField('Extension de los archivos subidos',max_length=10,null = True, blank = True)
     unidadArea = models.ForeignKey(UnidadArea,on_delete = models.CASCADE,null=True,blank=True)
-    historical = HistoricalRecords(excluded_fields=['slug','nombreDocumento','contenidoOCR','documento_file','extension','unidadArea',])
+    scope = models.BooleanField(default = True)
+    user = models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False)
+    historical = HistoricalRecords(excluded_fields=['slug','nombreDocumento','contenidoOCR','documento_file','extension','unidadArea','user','scope',])
 
     @property
     def _history_user(self):
