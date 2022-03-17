@@ -14,6 +14,17 @@ from pathlib import Path
 
 from decouple import config
 import os
+import platform
+sistema = platform.system()
+if(sistema == "Linux"):
+    print("Sistema actual: Linux")
+    import locale
+    import sys
+    locale.getdefaultlocale()
+    locale.getlocale()
+    sys.getfilesystemencoding()
+else:
+    print("Sistema actual: Windows")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

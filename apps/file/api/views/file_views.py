@@ -27,12 +27,14 @@ from django.db.models import Q
 from django.core.paginator import Paginator
 
 def guardarOcr(file,id,idUser,textoExtraido):
-    if textoExtraido == "":
+    '''if textoExtraido == "":
         documentoRenderisado = DocumentoOCR(file)
         text = str(documentoRenderisado.obtenerTexto())
               
     elif textoExtraido:
-        text = textoExtraido
+        text = textoExtraido'''
+    documentoRenderisado = DocumentoOCR(file)
+    text = str(documentoRenderisado.obtenerTexto())
     file = FileUpdateOcrSerializer(File.objects.filter(id = id).first(),data = {'contenidoOCR':text})
     if file.is_valid():        
         fileSave = file.save()
@@ -152,6 +154,8 @@ class FileListViewSet(Authentication,viewsets.GenericViewSet):
                 return Response({'error':'La carpeta contenedora o el file son privados'},status = status.HTTP_401_UNAUTHORIZED)
             documento_serializer = self.get_serializer(documento,data = request.data)
             if documento_serializer.is_valid():
+                if bool(documento_serializer.validated_data['scope']) == False:
+                    documento_serializer.validated_data['user_id'] = self.userFull.id
                 fileUpdate = documento_serializer.save()
                 #set history file
                 setHistory(fileUpdate,'actualizo file',self.userFull.id)
@@ -193,6 +197,7 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
                 ruta = settings.MEDIA_ROOT+'files/'
                 fs = FileSystemStorage(location=ruta)
                 nameFile = request.FILES['documento_file'].name.replace(" ","_")
+                print(nameFile)
                 file = fs.save(nameFile,request.FILES['documento_file'])
                 fileurl = fs.url(file)
                 #documento_serializer.validated_data['documento_file'] = doc
@@ -202,7 +207,7 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
                 #setHistory(documento,'registro file',self.userFull.id)
                 documento = File()
                 documento.nombreDocumento = documento_serializer.validated_data['nombreDocumento']
-                documento.documento_file = fileurl[1:]
+                documento.documento_file = nameFile
                 documento.user_id = self.userFull.id
                 documento.scope = documento_serializer.validated_data['publico']
                 documento.extension,application = extraerExtencion(fileurl[1:])

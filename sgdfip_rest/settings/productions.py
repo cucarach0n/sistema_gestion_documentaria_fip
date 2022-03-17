@@ -3,7 +3,7 @@ from .base import *
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [config('IP_SERVER')]
+ALLOWED_HOSTS = config('IP_SERVER').split(',')
 
 
 # Database

@@ -26,7 +26,7 @@ class UserToken(Authentication,APIView):
             #print(user_token.created)
             user = UserTokenSerializer(self.user)
             #set history user
-            setHistory(user,"Solicitud token nuevo",user.id)
+            setHistory(self.userFull,"Solicitud token nuevo",self.userFull.id)
             return Response({
                 'token': user_token.key,
                 'user' : user.data,

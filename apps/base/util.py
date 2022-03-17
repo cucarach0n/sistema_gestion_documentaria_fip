@@ -18,10 +18,8 @@ from django.core.files.storage import FileSystemStorage
 
 sistema = platform.system()
 if(sistema == "Windows"):
-    print("Sistema actual: Windows")
     pytesseract.pytesseract.tesseract_cmd = config('TESSERACT_CMD_PATH')#r'C:\Program Files\Tesseract-OCR\tesseract'
-else:
-    print("Sistema actual: Linux")
+
 #config('TESSERACT_CMD_PATH')
 
 

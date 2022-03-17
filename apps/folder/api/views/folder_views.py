@@ -138,6 +138,8 @@ class FolderUpdateAPIView(Authentication,viewsets.GenericViewSet):
         if folderResult:
             folderUpdateSerializer = self.get_serializer(self.get_queryset(pk),data = request.data)
             if folderUpdateSerializer.is_valid():
+                if bool(folderUpdateSerializer.validated_data['scope']) == False:
+                    folderUpdateSerializer.validated_data['user_id'] = self.userFull.id
                 folder = folderUpdateSerializer.save()
                 #set history subfolder
                 setHistory(folder,'datos del folder actualizado',self.userFull.id)
