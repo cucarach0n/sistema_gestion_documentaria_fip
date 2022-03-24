@@ -1,14 +1,34 @@
-from dataclasses import dataclass
-from apps.base.util import validarCompartido
-from apps.folder.api.serializers.folder_serializer import FolderDirecotorioListSerializer
+from apps.base.util import clonarCarpetaCompartida, validarCompartido
+from apps.folder.api.serializers.folder_serializer import FolderDirecotorioListSerializer, FolderDirecotorioListShareSerializer
 from apps.folder.models import Folder
-from apps.share.api.serializers.folderShare_serializers import FolderShareCreateSerializer, FolderShareValidateCreateSerializer
+from apps.share.api.serializers.fileShare_serializers import FileShareCreateSerializer
+from apps.share.api.serializers.folderShare_serializers import FolderShareClonarSerializer, FolderShareCreateSerializer, FolderShareValidateCreateSerializer
+from apps.folder.api.serializers.treefolder_serializer import TreeFolderSerializer
 from apps.share.models import FolderShare
+from apps.file.models import File
 from rest_framework.response import Response
 from rest_framework import status
 from apps.users.authenticacion_mixings import Authentication
 from rest_framework import viewsets
 
+class FolderShareCloneViewSet(Authentication,viewsets.GenericViewSet):
+    serializer_class = FolderShareClonarSerializer
+    def get_queryset(self,pk):
+        return self.get_serializer().Meta.model.objects.get(slug = pk)
+    def retrieve(self,request,pk):
+        folderResult = self.get_queryset(pk)
+        if folderResult:
+            if not validarCompartido(folderResult.slug,False,self.userFull.id):
+                return Response({'error':'La carpeta solicitada no esta disponible'},status = status.HTTP_401_UNAUTHORIZED)
+            if Folder.objects.filter(nombre = folderResult.nombre):
+                return Response({'error':'La carpeta ya existe'},status = status.HTTP_400_BAD_REQUEST)
+            folderMaster = Folder.objects.filter(scope = False,
+                                                unidadArea_id = self.userFull.unidadArea_id,
+                                                user_id =self.userFull.id,
+                                                carpeta_hija__isnull =True).first()
+            clonarCarpetaCompartida(folderResult.slug,self.userFull,folderMaster.id)
+            return Response({'mensaje':'carpeta clonada'},status = status.HTTP_200_OK)
+        return Response({"error":"la carpeta no existe"},status = status.HTTP_400_BAD_REQUEST)    
 class FolderShareViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = FolderShareCreateSerializer
 
@@ -18,8 +38,11 @@ class FolderShareViewSet(Authentication,viewsets.GenericViewSet):
         else:
             return Folder.objects.filter(slug = pk)
     def create(self,request):
+        
         folderShareSerializer = self.get_serializer(data = request.data,context = {'userId':self.userFull.id,'unidadId':self.userFull.unidadArea_id})
         if folderShareSerializer.is_valid():
+            #if Folder.objects.filter(carpeta_hija__isnull =True,unidadArea_id = self.userFull.unidadArea_id,slug = folderShareSerializer.validated_data['slugFolder']):
+            #    return Response({'mensaje':'Esta carpeta no se puede compartir'},status = status.HTTP_401_UNAUTHORIZED)
             folderShareValidateSerializer = FolderShareValidateCreateSerializer(data = {
                 'folder':folderShareSerializer.validated_data['slugFolder'],
                 'userTo':folderShareSerializer.validated_data['correoTo'],
@@ -37,16 +60,23 @@ class FolderShareViewSet(Authentication,viewsets.GenericViewSet):
             return Response(folderShareValidateSerializer.errors,status = status.HTTP_400_BAD_REQUEST)
         return Response(folderShareSerializer.errors,status = status.HTTP_400_BAD_REQUEST)
     def list(self,request):
-        folderAllShareSerialiser = FolderDirecotorioListSerializer(self.get_queryset(),many = True,context = {'userId':self.userFull.id,'userStaff': 5})        
-        return Response(folderAllShareSerialiser.data,status = status.HTTP_200_OK)
-    
+        folderAllShareSerialiser = FolderDirecotorioListShareSerializer(self.get_queryset(),many = True,context = {'userId':self.userFull.id,'userStaff': 5})
+        files = FileShareCreateSerializer(File.objects.filter(fileshare__estado = True,fileshare__userTo_id = self.userFull.id),many = True)   
+        arbol = TreeFolderSerializer(self.get_queryset(),many = True)
+        #return Response(folderAllShareSerialiser.data,status = status.HTTP_200_OK)
+        return Response({
+            'nombre':'Carpeta compartida',
+            'subDirectorios': folderAllShareSerialiser.data,
+            'files':files.data,
+            'treefolders':arbol.data           
+        },status = status.HTTP_200_OK)
     def retrieve(self,request,pk):
         
         folderResult = self.get_queryset(pk)
         if folderResult:
             if not validarCompartido(folderResult.first().slug,False,self.userFull.id):
                 return Response({'error':'La carpeta solicitada no esta disponible'},status = status.HTTP_401_UNAUTHORIZED)
-            folderSerializer = FolderDirecotorioListSerializer(folderResult,many = True,context = {'userId':self.userFull.id,'userStaff': 5})
+            folderSerializer = FolderDirecotorioListShareSerializer(folderResult,many = True,context = {'userId':self.userFull.id,'userStaff': 5})
             return Response(folderSerializer.data,status = status.HTTP_200_OK)
         return Response({'error':'La carpeta no existe'},status = status.HTTP_400_BAD_REQUEST)
             

@@ -3,6 +3,7 @@ from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from apps.share.models import FolderShare
+from apps.file.models import File, FileInFolder
 from decouple import config
 from os import remove
 from PIL import Image, ImageEnhance, ImageFilter
@@ -15,6 +16,7 @@ from django.db.models import Q
 
 import unicodedata
 from django.core.files.storage import FileSystemStorage
+from django.db import transaction
 
 sistema = platform.system()
 if(sistema == "Windows"):
@@ -94,11 +96,66 @@ def validarCompartido(foldeSlug,compartido = False,userId = None):
                 compartido = True
             else:
                 compartido = False
-            
-        print(folderinfolder.parent_folder.slug)
-        validarCompartido(folderinfolder.parent_folder_id,compartido,userId)
+        validarCompartido(folderinfolder.parent_folder.slug,compartido,userId)
         
     return compartido
+
+def setPublicHijos(foldeSlug):
+    folders = Folder.objects.filter(carpeta_hija__parent_folder__slug = foldeSlug)
+    for folder in folders:
+        
+        folder.scope = True
+        folder.save()
+        File.objects.filter(fileinfolder__parent_folder_id = folder.id).update(scope = True)
+        setPublicHijos(folder.slug)
+
+
+def createFolder(nombreFolder,userId,unidadAreaId,padreId):
+    folderCreate = Folder.objects.create( 
+        slug = get_random_string(11),
+        nombre = nombreFolder,
+        unidadArea_id = unidadAreaId,
+        scope = False,
+        user_id = userId
+
+    )
+    FolderInFolder.objects.create(
+        child_folder_name = folderCreate.nombre,
+        child_folder_id = folderCreate.id,
+        parent_folder_id = padreId
+    )
+    return folderCreate
+@transaction.atomic
+def clonarCarpetaCompartida(foldeSlug,user,padreId):
+    rutaFile = settings.MEDIA_ROOT+'files/'
+    folderActual = Folder.objects.get(slug = foldeSlug)
+    #creando folder padre
+    folderPadreCreate = createFolder(folderActual.nombre,user.id,user.unidadArea_id,padreId)
+    files = File.objects.filter(fileinfolder__parent_folder_id = folderActual.id)
+    for file in files:
+
+        fileObject = open(rutaFile+file.documento_file.name, 'rb')
+        fs = FileSystemStorage(location=rutaFile)
+        fileSave = fs.save(file.documento_file.name,fileObject)
+        nameNewFile = fs.get_valid_name(fileSave)
+
+        fileCreate = File.objects.create(slug = get_random_string(11),
+                            nombreDocumento = file.nombreDocumento,
+                            contenidoOCR = file.contenidoOCR,
+                            documento_file = nameNewFile,
+                            extension = file.extension,
+                            user_id=user.id,
+                            scope=False,
+                            unidadArea_id=user.unidadArea_id)
+        FileInFolder.objects.create(file_id = fileCreate.id,parent_folder_id = folderPadreCreate.id)
+    folders = Folder.objects.filter(carpeta_hija__parent_folder__slug = foldeSlug)
+    for folder in folders:
+        
+        if Folder.objects.filter(carpeta_hija__parent_folder__slug = folder.slug):
+            clonarCarpetaCompartida(folder.slug,user,folderPadreCreate.id)
+        else:
+            createFolder(folder.nombre,user.id,user.unidadArea_id,folderPadreCreate.id)
+
 def validarPrivado(modelo,userId,is_file = False):
     if is_file:
         if modelo.scope ==False:
@@ -178,8 +235,9 @@ class DocumentoOCR():
             remove(settings.MEDIA_ROOT+'test/'+filename)
             text = text.replace('-\n', '')   
             percent =  (i*100)/filelimit
-            print(str(round(percent,2)) + " %")
+            #print(str(round(percent,2)) + " %")
             textGenerado += text
+        
         
         print('contenido extraido por el OCR exitosamente!')
         return textGenerado

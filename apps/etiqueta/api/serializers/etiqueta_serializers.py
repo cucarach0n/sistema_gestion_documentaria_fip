@@ -30,7 +30,10 @@ class EtiquetaCreateSerializer(serializers.Serializer):
         etiqueta = Etiqueta(file_id = fileResult.id,nombre = validated_data['nombre'],user_id = self.context['userId'])
         etiqueta.save()
         return etiqueta
-
+class EtiquetaListSerializer(serializers.Serializer):
+    class Meta:
+        model = Etiqueta
+        fields = "__all__"
 class EtiquetaBuscarSerializer(serializers.Serializer):
     slugFile = serializers.CharField(max_length = 11,required=True)
          

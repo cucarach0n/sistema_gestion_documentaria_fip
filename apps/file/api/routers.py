@@ -1,10 +1,12 @@
 from rest_framework.routers import DefaultRouter
-from apps.file.api.views.file_views import FileViewSet,FileObtenerViewSet,FileBuscarAPIView,FileListViewSet, FileHistoryAPIView
+from apps.file.api.views.file_views import FileViewSet,FileObtenerViewSet,FileBuscarAPIView,FileListViewSet, FileHistoryAPIView,FileUpdatePrivateViewSet
 from apps.file.api.views.fileTag_views import FileTagAPIView,FileTagDeleteAPIView
 from apps.file.api.views.general_views import FileListAPIView
 router = DefaultRouter()
 
 router.register(r'upload',FileViewSet, basename = 'upload-view')
+router.register(r'updatePrivate',FileUpdatePrivateViewSet, basename = 'updatePrivateFile-view')
+#router.register(r'uploadPrivate',FilePrivateViewSet, basename = 'uploadPrivate-view')
 router.register(r'all',FileListAPIView, basename =  'all-view')
 router.register(r'tag',FileTagAPIView, basename =  'FileTagList-view')
 router.register(r'ver',FileObtenerViewSet, basename =  'FileGet-view')

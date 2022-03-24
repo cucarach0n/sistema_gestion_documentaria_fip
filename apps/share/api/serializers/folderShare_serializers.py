@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 from apps.base.util import validarPrivado
 from apps.folder.models import Folder, FolderInFolder
 from apps.users.models import User
@@ -13,7 +14,10 @@ class FolderShareCreateSerializer(serializers.Serializer):
         if userResult:
             if not userResult.id == int(self.context['userId']):
                 return userResult.id
-            raise serializers.ValidationError('Seleccione otro usuario a enviar el folder') 
+            elif userResult.id == int(self.context['userId']):
+                raise serializers.ValidationError('Seleccione otro usuario a enviar el folder')
+            elif userResult.unidadArea_id == self.context['unidadId']:
+                raise serializers.ValidationError('No se puede compartir con usuarios de la misma unidad')
         raise serializers.ValidationError('El usuario a compartir no existe!')        
         
     def validate_slugFolder(self,value):
@@ -30,4 +34,10 @@ class FolderShareValidateCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = FolderShare
         fields = ['userFrom','userTo','folder']
+class FolderShareClonarSerializer(serializers.Serializer):
+    slugFolder = serializers.CharField()
+    def validate_slugFolder(self,value):
+        return value
+    class Meta:
+        model = Folder
         

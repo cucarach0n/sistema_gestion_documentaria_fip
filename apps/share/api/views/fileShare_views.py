@@ -35,9 +35,9 @@ class FileShareViewSet(Authentication,viewsets.GenericViewSet):
                 return Response({'mensaje':'Se compartio exitosamente el file con el usuario'},status = status.HTTP_200_OK)
             return Response(fileShareValidateSerializer.errors,status = status.HTTP_400_BAD_REQUEST)
         return Response(fileShareSerializer.errors,status = status.HTTP_400_BAD_REQUEST)
-    def list(self,request):
+    '''def list(self,request):
         fileAllShareSerialiser = FileDetalleSerializer(self.get_queryset(),many = True)        
-        return Response(fileAllShareSerialiser.data,status = status.HTTP_200_OK)
+        return Response(fileAllShareSerialiser.data,status = status.HTTP_200_OK)'''
     
     def retrieve(self,request,pk):
         

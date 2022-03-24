@@ -9,7 +9,7 @@ from apps.users.models import User
 # Create your models here.
 class FileShare(models.Model):
     id = models.AutoField(primary_key = True)
-    file = models.OneToOneField(File,on_delete=models.CASCADE)
+    file = models.ForeignKey(File,on_delete=models.CASCADE)
     userFrom = models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False,related_name='userFileFrom')
     userTo = models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False,related_name='userFileTo')
     fechaCreacion = models.DateTimeField("Fecha de creacion",auto_now=True)
@@ -33,7 +33,7 @@ class FileShare(models.Model):
 
 class FolderShare(models.Model):
     id = models.AutoField(primary_key = True)
-    folder = models.OneToOneField(Folder,on_delete=models.CASCADE)
+    folder = models.ForeignKey(Folder,on_delete=models.CASCADE)
     userFrom = models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False,related_name='userFolderFrom')
     userTo = models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False,related_name='userFolderTo')
     fechaCreacion = models.DateTimeField("Fecha de creacion",auto_now=True)

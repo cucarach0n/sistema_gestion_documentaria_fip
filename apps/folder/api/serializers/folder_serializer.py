@@ -7,6 +7,15 @@ from apps.base.util import obtenerRuta
 from apps.folder.api.serializers.treefolder_serializer import TreeFolderSerializer
 from django.db.models import Q
 
+def crearRutaCompartida(ruta,rutaLogica):
+    newRuta = 'Carpeta compartida'
+    newrutaLogica = 'Carpeta compartida'
+    for i in range(1,len(ruta.split('>'))):
+        newRuta += ' > ' + ruta.split('>')[i]
+    for i in range(1,len(rutaLogica.split('>'))):
+        newrutaLogica += ' > ' + rutaLogica.split('>')[i]
+    return newRuta,newrutaLogica
+
 class FolderDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Folder
@@ -25,7 +34,24 @@ class FolderDetailSerializer(serializers.ModelSerializer):
             'fechaUpdate':instance.fechaUpdate,
             'publico':instance.scope
         }
+class FolderDetailShareSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Folder
+        fields = '__all__'
 
+    def to_representation(self,instance):
+        ruta = obtenerRuta(instance.id,[instance.slug],False)
+        rutaLogica = obtenerRuta(instance.id,[instance.nombre],True)
+        newRuta,newrutaLogica = crearRutaCompartida(ruta,rutaLogica) 
+        return {
+            
+            'slug':instance.slug,
+            'nombre':instance.nombre,
+            'rutaFisica':newrutaLogica,
+            'rutaSlug':"/"+newRuta,
+            'fechaCreacion':instance.fechaCreacion,
+            'fechaUpdate':instance.fechaUpdate
+        }
 class FolderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Folder
@@ -97,18 +123,34 @@ class FolderDirecotorioListSerializer(serializers.ModelSerializer):
         '''folder = FolderDetailSerializer(Folder.objects.filter(carpeta_hija__parent_folder_id = instance.id),many = True)'''
         #endbackup
         if int(self.context['userStaff']) < 3: 
-            folderQuery = Folder.objects.filter(Q(user_id = self.context['userId'],scope=False,carpeta_hija__parent_folder_id = instance.id) 
+            #V1
+            '''folderQuery = Folder.objects.filter(Q(user_id = self.context['userId'],scope=False,carpeta_hija__parent_folder_id = instance.id) 
                                                 | Q(scope = True,carpeta_hija__parent_folder_id = instance.id)).distinct()
             fileQuery = File.objects.filter(Q(user_id = self.context['userId'],scope = False,fileinfolder__parent_folder__id =instance.id)
-                                            |Q(scope = True,fileinfolder__parent_folder__id =instance.id)).distinct()
+                                            |Q(scope = True,fileinfolder__parent_folder__id =instance.id)).distinct()'''
+            #V2
+            '''folderQuery = Folder.objects.filter(scope = True,carpeta_hija__parent_folder_id = instance.id)
+            fileQuery = File.objects.filter(scope = True,fileinfolder__parent_folder__id =instance.id)'''
+            #V3
+            folderQuery = Folder.objects.filter(Q(scope = False,carpeta_hija__parent_folder_id = instance.id,user_id = self.context['userId'])|
+                                                Q(scope = True,carpeta_hija__parent_folder_id = instance.id))
+            fileQuery = File.objects.filter(Q(scope = False,fileinfolder__parent_folder__id =instance.id,user_id = self.context['userId'])|
+                                            Q(scope = True,fileinfolder__parent_folder__id =instance.id))                              
         elif int(self.context['userStaff']) > 2 and int(self.context['userStaff']) < 5:
+            
             folderQuery = Folder.objects.filter(carpeta_hija__parent_folder_id = instance.id)
-            fileQuery = files = FileDetalleSerializer(File.objects.filter(fileinfolder__parent_folder__id =instance.id),many = True,context = {'padre':instance.id})
+            fileQuery = File.objects.filter(fileinfolder__parent_folder__id =instance.id)
+        #carpetas compartidas
         elif int(self.context['userStaff']) == 5:
+            
             folderQuery = Folder.objects.filter(scope = True,carpeta_hija__parent_folder_id = instance.id)
             fileQuery = File.objects.filter(scope = True,fileinfolder__parent_folder__id =instance.id)
+        '''elif int(self.context['userStaff']) == 6:
+            
+            folderQuery = Folder.objects.filter(scope = False,carpeta_hija__parent_folder_id = instance.id,user_id = self.context['userId'])
+            fileQuery = File.objects.filter(scope = False,fileinfolder__parent_folder__id =instance.id,user_id = self.context['userId'])'''
+
         folder = FolderDetailSerializer(folderQuery,many = True)
-        
         #files = FileDetalleSerializer(File.objects.filter(fileinfolder__parent_folder__id =instance.id),many = True,context = {'padre':instance.id})
         files = FileDetalleSerializer(fileQuery,many = True,context = {'padre':instance.id})
         ruta = obtenerRuta(instance.id,[instance.slug],False)
@@ -127,11 +169,42 @@ class FolderDirecotorioListSerializer(serializers.ModelSerializer):
             'files':files.data,
             'treefolders':treeArbolSerializer.data
         }
+class FolderDirecotorioListShareSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Folder
+        fields = "__all__"
+    def to_representation(self,instance):
+        folderQuery = Folder.objects.filter(scope = True,carpeta_hija__parent_folder_id = instance.id)
+        fileQuery = File.objects.filter(scope = True,fileinfolder__parent_folder__id =instance.id)
+
+
+        folder = FolderDetailShareSerializer(folderQuery,many = True)
+        files = FileDetalleSerializer(fileQuery,many = True,context = {'padre':instance.id})
+        ruta = obtenerRuta(instance.id,[instance.slug],False)
+        rutaLogica = obtenerRuta(instance.id,[instance.nombre],True)
+        newRuta,newrutaLogica = crearRutaCompartida(ruta,rutaLogica) 
+        treeArbolSerializer = TreeFolderSerializer(folderQuery,many = True)
+        return {
+            'slug':instance.slug,
+            'nombre':instance.nombre,
+            'rutaLogica': newrutaLogica.replace('  '," "),
+            'rutaSlug': newRuta.replace('  '," "),
+            'fechaCreacion':instance.fechaCreacion,
+            'fechaUpdate':instance.fechaUpdate,
+            'subdirectorios': folder.data,
+            'files':files.data,
+            'treefolders':treeArbolSerializer.data
+        }
 class FolderDeleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Folder
         fields = ['slug']
 class FolderUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Folder
+        fields = ['nombre']
+class FolderUpdatePrivateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Folder
         fields = ['nombre','scope']

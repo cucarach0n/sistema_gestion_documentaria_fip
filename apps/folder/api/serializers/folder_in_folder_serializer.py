@@ -12,7 +12,7 @@ class FolderInFolderValidateCreateSerializer(serializers.Serializer):
     #nombreUsuario = serializers.CharField(max_length = 200)
     child_folder_name = serializers.CharField(max_length=250)
     padreSlug = serializers.CharField(max_length=11)
-    publico = serializers.BooleanField(default = True)
+    #publico = serializers.BooleanField(default = True)
 
     def validate_child_folder_name(self,value):
         padre = FolderInFolder.objects.filter(child_folder_name  = value, parent_folder =Folder.objects.filter(slug = self.context['padreSlug']).first()).first()        

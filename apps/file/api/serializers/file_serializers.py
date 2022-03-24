@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from apps.folder.models import FolderInFolder
-from apps.unidadArea.models import UnidadArea
+from apps.etiqueta.api.serializers.etiqueta_serializers import EtiquetaListSerializer
+from apps.etiqueta.models import Etiqueta
 from rest_framework import serializers
 from apps.file.models import File, FileInFolder, Folder
 import os
@@ -18,7 +18,7 @@ class FileFolderCreateSerializer(serializers.Serializer):
     nombreDocumento = serializers.CharField(max_length=250)
     documento_file = serializers.FileField()
     directorioslug = serializers.CharField(max_length=11)
-    publico = serializers.BooleanField(default = True)
+    #publico = serializers.BooleanField(default = True)
     #unidadareaid = serializers.CharField()
 
     def validate_nombreDocumento(self,value):
@@ -33,8 +33,11 @@ class FileFolderCreateSerializer(serializers.Serializer):
 class FileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
+        fields = ['nombreDocumento']
+class FileUpdatePrivateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = File
         fields = ['nombreDocumento','scope']
-
 class FileObtenerSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
@@ -42,7 +45,7 @@ class FileObtenerSerializer(serializers.ModelSerializer):
 class FileUpdateOcrSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
-        exclude = ('extension','documento_file','nombreDocumento','slug',)
+        exclude = ('documento_file','nombreDocumento','slug','extension','unidadArea','scope','user',)
 
 class FileDetalleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -53,11 +56,12 @@ class FileDetalleSerializer(serializers.ModelSerializer):
         folder = Folder.objects.filter(fileinfolder__file = instance).first()
         fileinfolder = FileInFolder.objects.filter(file = instance).first()
         tag_serializer = TagListSerializer(Tag.objects.filter(filetag__file = instance),many =True)
+        etiqueta_serializer = EtiquetaListSerializer(Etiqueta.objects.filter(file = instance),many =True)
         if folder:
             '''rutaLogica = "/"+obtenerRuta(folder.id,[folder.nombre],True)+"/"+instance.documento_file.name
             ruta = "/"+obtenerRuta(folder.id,[folder.slug],False)+"/"+instance.slug'''
-            rutaLogica = obtenerRuta(folder.id,[folder.nombre],True)
-            ruta = "/"+obtenerRuta(folder.id,[folder.slug],False)+"/"+instance.slug
+            rutaLogica = obtenerRuta(folder.id,[folder.nombre],True) +" > "+instance.nombreDocumento
+            ruta = obtenerRuta(folder.id,[folder.slug],False)+" > "+instance.slug
         else:
             rutaLogica = "?"
             ruta = "?"
@@ -74,6 +78,7 @@ class FileDetalleSerializer(serializers.ModelSerializer):
             'url':"{0}/file/ver/{1}/".format(config("URL_SERVER"),instance.slug),
             'publico':instance.scope,
             'tags':tag_serializer.data,
+            'etiquetas':etiqueta_serializer.data,
             'fechaCreacion':fileinfolder.fechaCreacion,
             'fechaUpdate':fileinfolder.fechaUpdate
         }

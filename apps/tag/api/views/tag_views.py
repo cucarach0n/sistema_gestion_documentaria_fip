@@ -34,11 +34,9 @@ class TagListAPIView(viewsets.GenericViewSet):
         else:
             return self.get_serializer().Meta.model.objects.filter(id = pk)
     def list(self,request):
-        print('get')
         tag_serializer = self.serializer_class(self.get_queryset(),many = True)
         return Response(tag_serializer.data,status = status.HTTP_200_OK)
     def retrieve(self,request,pk =None):
-        print('retrieve')
         tag_serializer = self.serializer_class(self.get_queryset(pk).first())
         if tag_serializer:
             return Response(tag_serializer.data,status = status.HTTP_200_OK)
@@ -65,7 +63,8 @@ class TagAPIView(viewsets.GenericViewSet):
                                                 ,fechaUpdate = tagSave.fechaUpdate
                                                 ,history_date = datetime.today(),history_change_reason = "last",history_type = '+',history_user_id = 1)
             history.save()'''
-            return Response({'mensaje':'Se registros correctamente el tag'},status = status.HTTP_200_OK)
+            tagCreadoSerialires = TagListSerializer(tagSave)
+            return Response(tagCreadoSerialires.data,status = status.HTTP_200_OK)
         else:
             return Response(tag_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
 

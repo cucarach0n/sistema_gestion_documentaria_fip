@@ -1,3 +1,4 @@
+from apps.folder.models import Folder, FolderInFolder
 from apps.users.models import Contrasena_reinicio
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -47,6 +48,22 @@ class UserAPIView(APIView):
         users = User.objects.all()
         users_serializer = UserSerializer(users,many = True)
         return Response(users_serializer.data, status = status.HTTP_200_OK )
+def createCarpetaPrivadaUser(unidadAreaId,user):
+    #folderMaster = Folder.objects.filter(carpeta_hija__isnull =True,unidadArea_id = unidadAreaId).first()
+
+    folderHijoPrivado = Folder()
+    folderHijoPrivado.slug = get_random_string(11)
+    folderHijoPrivado.nombre = "Carpeta privada de {0} {1}.".format(user.name[0:1].upper()+user.name[1:].lower(),user.last_name[0:1].upper())
+    folderHijoPrivado.unidadArea_id = unidadAreaId
+    folderHijoPrivado.scope = False
+    folderHijoPrivado.user_id = user.id
+    folderHijoPrivado.save()
+
+    '''folderInFolder = FolderInFolder()
+    folderInFolder.child_folder_name = folderHijoPrivado.nombre
+    folderInFolder.child_folder_id = folderHijoPrivado.id
+    folderInFolder.parent_folder_id = folderMaster.id
+    folderInFolder.save()''' 
 class UserCreateAPIView(generics.CreateAPIView):
     serializer_class = UserCreateSerializer
     def post(self,request):
@@ -75,8 +92,11 @@ class UserCreateAPIView(generics.CreateAPIView):
                 userSendEmail = contrasena_reinicioO.save()
                 
                 absurl = 'https://'+current_site+'/usuario/validar/'+userSendEmail.token
-                send_email({'email':'devalo19@gmail.com','domain': str(absurl)})
+                #enviar email
+                #send_email({'email':'devalo19@gmail.com','domain': str(absurl)})
             userCreadoSerializer = UserSerializer(user)
+            if user.is_staff < 3:
+                createCarpetaPrivadaUser(user.unidadArea_id,user)
             return Response(userCreadoSerializer.data,status = status.HTTP_200_OK)
         return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
 
