@@ -26,7 +26,7 @@ from django.conf import settings
 schema_view = get_schema_view(
    openapi.Info(
       title="Sistema Gestion Documentaria API",
-      default_version='v0.2.0',
+      default_version='v0.8.0',
       description="Sistema para el almacenamiento masivo de archivos",
       terms_of_service="https://www.google.com/policies/terms/",
       contact=openapi.Contact(email="devalo19@gmail.com"),

@@ -20,18 +20,39 @@ class UserToken(Authentication,APIView):
         #print(username)
         #testTemplate()
         try:
-            folder = Folder.objects.filter(carpeta_hija__isnull =True,unidadArea_id = self.userFull.unidadArea_id).first()
+            
+            if self.userFull.is_superuser == False:
+                print('no es admin')
+                folder = Folder.objects.filter(carpeta_hija__isnull =True,unidadArea_id = self.userFull.unidadArea_id).first()
+                folderMaster = Folder.objects.filter(scope = False,
+                                                    unidadArea_id = self.userFull.unidadArea_id,
+                                                    user_id =self.userFull.id,
+                                                    carpeta_hija__isnull =True).first()
+                nombrePrivado = folderMaster.nombre
+                slugPrivado = folderMaster.slug
+
+                nombre = folder.nombre
+                slug = folder.slug
+                
+            else:
+                nombrePrivado = ""
+                slugPrivado = ""
+
+                nombre = ""
+                slug = ""
             #print(folder)
             user_token,create = Token.objects.get_or_create(user = self.user)
             #print(user_token.created)
             user = UserTokenSerializer(self.user)
-            #set history user
+            #set history user 
             setHistory(self.userFull,"Solicitud token nuevo",self.userFull.id)
             return Response({
                 'token': user_token.key,
                 'user' : user.data,
-                'slugPadre': folder.slug,
-                'carpetaPadre': folder.nombre
+                'slugPadre': slug,
+                'carpetaPadre': nombre,
+                'slugPrivate':slugPrivado,
+                'carpetaPrivada':nombrePrivado
                 },status = status.HTTP_200_OK)
             
         except:

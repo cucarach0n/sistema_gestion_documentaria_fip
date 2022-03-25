@@ -10,7 +10,8 @@ from rest_framework import viewsets
 
 class EtiquetaCreateViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = EtiquetaCreateSerializer
-
+    def get_queryset(self,pk):
+        return Etiqueta.objects.get(id = pk,user_id = self.userFull.id)
     def create(self,request):
         etiquetaSerializer = self.get_serializer(data = request.data,context = {'userId':self.userFull.id,'fileSlug':request.data['slugFile'],'idUnidadArea':self.userFull.unidadArea_id})
         if etiquetaSerializer.is_valid():
@@ -19,18 +20,37 @@ class EtiquetaCreateViewSet(Authentication,viewsets.GenericViewSet):
             etiquetaCreatedSerializer= EtiquetaListSerializer(etiquetaCreado)
             return Response(etiquetaCreatedSerializer.data,status = status.HTTP_200_OK)
         return Response(etiquetaSerializer.errors,status = status.HTTP_400_BAD_REQUEST)
-
+    def destroy(self,request,pk):
+        etiqueta = self.get_queryset(pk)
+        if etiqueta:
+            etiqueta.delete()
+            return Response({'mensaje':'etiqueta eliminado correctamente'},status = status.HTTP_200_OK)
+        return Response({'error':'La etiqueta no existe'},status = status.HTTP_200_OK)
+    
 class EtiquetaBuscarViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = EtiquetaBuscarSerializer
 
     def get_queryset(self,slug = None):
         return Etiqueta.objects.filter(user_id = self.userFull.id, file = File.objects.get(slug = slug,unidadArea_id = self.userFull.unidadArea_id))
-
     def create(self,request):
         etiquetaFindSerializer = self.get_serializer(data = request.data)
         if etiquetaFindSerializer.is_valid():
             etiquetaResultSerializer = EtiquetaSerializer(self.get_queryset(etiquetaFindSerializer.validated_data['slugFile']),many = True)        
             return Response(etiquetaResultSerializer.data,status = status.HTTP_200_OK)
         return Response(etiquetaFindSerializer.errors,status = status.HTTP_400_BAD_REQUEST)
+    
+'''class EtiquedaEliminarViewSet(Authentication,viewsets.GenericViewSet):
+    
+    def get_queryset(self,pk):
+        return Etiqueta.objects.get(id = pk,user_id = self.userFull.id)
+    
+    def delete(self,request,pk):
+        etiqueta = self.get_queryset(pk)
+        if etiqueta:
+            etiqueta.delete()
+            
+            return Response({'mensaje':'etiqueta eliminado correctamente'},status = status.HTTP_200_OK)
+        return Response({'error':'La etiqueta no existe'},status = status.HTTP_200_OK)'''
+
 
 

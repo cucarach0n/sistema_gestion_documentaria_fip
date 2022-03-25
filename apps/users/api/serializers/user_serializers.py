@@ -34,7 +34,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         model = User
         exclude = ('id','estado','last_login','is_superuser','is_active','groups','user_permissions','avatar',)                
     def validate_correo(self, value):
-        if 'uni.pe' not in value:
+        if '@fip.uni.edu.pe' not in value:
             raise serializers.ValidationError('Error, el correo no es valido para esta institucion')
         return value
     def validate(self,data):

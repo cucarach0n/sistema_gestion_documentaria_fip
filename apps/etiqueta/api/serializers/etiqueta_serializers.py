@@ -30,7 +30,7 @@ class EtiquetaCreateSerializer(serializers.Serializer):
         etiqueta = Etiqueta(file_id = fileResult.id,nombre = validated_data['nombre'],user_id = self.context['userId'])
         etiqueta.save()
         return etiqueta
-class EtiquetaListSerializer(serializers.Serializer):
+class EtiquetaListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Etiqueta
         fields = "__all__"

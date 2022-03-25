@@ -19,6 +19,7 @@ class File(models.Model):
     unidadArea = models.ForeignKey(UnidadArea,on_delete = models.CASCADE,null=True,blank=True)
     scope = models.BooleanField(default = True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False)
+    eliminado = models.BooleanField(default = False)
     historical = HistoricalRecords(excluded_fields=['slug','nombreDocumento','contenidoOCR','documento_file','extension','unidadArea','user','scope',])
 
     @property
@@ -84,3 +85,25 @@ class FileTag(models.Model):
     
     def __str__(self):
         return "{0},{1}".format(self.id,self.fechaUpdate)
+class FileTrash(models.Model):
+    id =models.AutoField(primary_key=True)
+    user = models.ForeignKey(User,on_delete = models.CASCADE)
+    file = models.ForeignKey(File,on_delete = models.CASCADE)
+    fechaEliminacion = models.DateTimeField("Fecha de creacion",auto_now=True)
+    fechaUpdate = models.DateTimeField("Fecha de actualizacion",auto_now_add=True)
+
+    historical = HistoricalRecords()
+    
+    @property
+    def _history_user(self):
+        return self.changed_by
+    @_history_user.setter
+    def _history_user(self,value):
+        self.changed_by = value
+
+    class Meta():
+        verbose_name = 'Folder trash'
+        verbose_name_plural = 'Folder trashs'
+    
+    def __str__(self):
+        return "{0},{1}".format(self.user,self.fechaEliminacion)

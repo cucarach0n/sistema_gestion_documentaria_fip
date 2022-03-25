@@ -10,6 +10,15 @@ from hurry.filesize import size, si
 from apps.tag.api.serializers.tag_serializer import TagListSerializer
 from apps.tag.models import Tag
 from decouple import config
+
+def crearRutaCompartida(ruta,rutaLogica):
+    newRuta = 'Carpeta compartida'
+    newrutaLogica = 'Carpeta compartida'
+    for i in range(1,len(ruta.split('>'))):
+        newRuta += ' > ' + ruta.split('>')[i]
+    for i in range(1,len(rutaLogica.split('>'))):
+        newrutaLogica += ' > ' + rutaLogica.split('>')[i]
+    return newRuta,newrutaLogica
 class FileCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
@@ -77,6 +86,41 @@ class FileDetalleSerializer(serializers.ModelSerializer):
             'rutaSlug':ruta,
             'url':"{0}/file/ver/{1}/".format(config("URL_SERVER"),instance.slug),
             'publico':instance.scope,
+            'tags':tag_serializer.data,
+            'etiquetas':etiqueta_serializer.data,
+            'fechaCreacion':fileinfolder.fechaCreacion,
+            'fechaUpdate':fileinfolder.fechaUpdate
+        }
+class FileDetalleShareSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = File
+        exclude = ('contenidoOCR','unidadArea',)
+    def to_representation(self,instance):
+        fileSize = os.path.getsize(settings.MEDIA_ROOT+'files/'+instance.documento_file.name)
+        folder = Folder.objects.filter(fileinfolder__file = instance).first()
+        fileinfolder = FileInFolder.objects.filter(file = instance).first()
+        tag_serializer = TagListSerializer(Tag.objects.filter(filetag__file = instance),many =True)
+        etiqueta_serializer = EtiquetaListSerializer(Etiqueta.objects.filter(file = instance),many =True)
+        if folder:
+            '''rutaLogica = "/"+obtenerRuta(folder.id,[folder.nombre],True)+"/"+instance.documento_file.name
+            ruta = "/"+obtenerRuta(folder.id,[folder.slug],False)+"/"+instance.slug'''
+            rutaLogica = obtenerRuta(folder.id,[folder.nombre],True) +" > "+instance.nombreDocumento
+            ruta = obtenerRuta(folder.id,[folder.slug],False)+" > "+instance.slug
+            newRuta,newrutaLogica = crearRutaCompartida(ruta,rutaLogica) 
+        else:
+            rutaLogica = "?"
+            ruta = "?"
+        
+        #print(folder)
+        return{
+            'nombre':instance.nombreDocumento,
+            'nombreArchivo':instance.documento_file.name,
+            'slug':instance.slug,
+            'size':str(size(fileSize, system=si)),
+            'extension':instance.extension,
+            'rutaLogica': newrutaLogica,
+            'rutaSlug':newRuta,
+            'url':"{0}/file/ver/{1}/".format(config("URL_SERVER"),instance.slug),
             'tags':tag_serializer.data,
             'etiquetas':etiqueta_serializer.data,
             'fechaCreacion':fileinfolder.fechaCreacion,

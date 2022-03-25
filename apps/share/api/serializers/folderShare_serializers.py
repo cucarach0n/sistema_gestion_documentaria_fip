@@ -29,7 +29,7 @@ class FolderShareCreateSerializer(serializers.Serializer):
                 raise serializers.ValidationError('Esta carpeta no se puede compartir')
             return folderResult.id
         
-        raise serializers.ValidationError('No existe la carpeta') 
+        raise serializers.ValidationError('No existe la carpeta')  
 class FolderShareValidateCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = FolderShare

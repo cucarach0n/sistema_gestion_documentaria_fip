@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
@@ -99,17 +100,38 @@ def validarCompartido(foldeSlug,compartido = False,userId = None):
         validarCompartido(folderinfolder.parent_folder.slug,compartido,userId)
         
     return compartido
-
+@transaction.atomic
 def setPublicHijos(foldeSlug):
     folders = Folder.objects.filter(carpeta_hija__parent_folder__slug = foldeSlug)
     for folder in folders:
-        
+        print(folder)
         folder.scope = True
         folder.save()
         File.objects.filter(fileinfolder__parent_folder_id = folder.id).update(scope = True)
         setPublicHijos(folder.slug)
-
-
+@transaction.atomic
+def setEliminarHijos(foldeSlug,eliminar = True):
+    folders = Folder.objects.filter(carpeta_hija__parent_folder__slug = foldeSlug)
+    for folder in folders:
+        folder.eliminado = eliminar
+        folder.save()
+        File.objects.filter(fileinfolder__parent_folder_id = folder.id).update(eliminado = eliminar)
+        setEliminarHijos(folder.slug,eliminar)
+      
+@transaction.atomic        
+def setDestruirHijos(foldeSlug):
+    rutaFile = settings.MEDIA_ROOT+'files/'
+    folderResult = Folder.objects.get(slug = foldeSlug)
+    files = File.objects.filter(fileinfolder__parent_folder_id = folderResult.id)
+    print(files)
+    for file in files:
+        os.remove(os.path.join(rutaFile+file.documento_file.name))
+    File.objects.filter(fileinfolder__parent_folder_id = folderResult.id).delete()
+    folders = Folder.objects.filter(carpeta_hija__parent_folder__slug = foldeSlug)
+    for folder in folders:
+        setDestruirHijos(folder.slug)    
+        folder.delete()
+        
 def createFolder(nombreFolder,userId,unidadAreaId,padreId):
     folderCreate = Folder.objects.create( 
         slug = get_random_string(11),

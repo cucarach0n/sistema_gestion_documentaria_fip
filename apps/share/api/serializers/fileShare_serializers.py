@@ -18,14 +18,14 @@ class FileShareCreateSerializer(serializers.Serializer):
         raise serializers.ValidationError('El usuario a compartir no existe!')        
         
     def validate_slugFile(self,value):
-        folderPadre = Folder.objects.filter(fileinfolder__file__slug = value,fileinfolder__file__scope = True,unidadArea_id = self.context['unidadId']).first()
+        folderPadre = Folder.objects.filter(fileinfolder__file__slug = value,unidadArea_id = self.context['unidadId']).first()
         if folderPadre:
             if validarPrivado(folderPadre,self.context['userId']):
                 raise serializers.ValidationError('La carpeta contenedora es privada, no se puede compartir')
-            file = File.objects.filter(slug = value,scope = True,unidadArea_id = self.context['unidadId']).first()
-            if file.scope:
+            file = File.objects.filter(slug = value,unidadArea_id = self.context['unidadId']).first()
+            if file:
                 return file.id
-            raise serializers.ValidationError('El documento es privado, no se puede compartir')
+            raise serializers.ValidationError('El documento no existe')
         raise serializers.ValidationError('No existe el file o es privado') 
 class FileShareValidateCreateSerializer(serializers.ModelSerializer):
     class Meta:

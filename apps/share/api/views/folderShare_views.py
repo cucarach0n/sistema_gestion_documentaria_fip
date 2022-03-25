@@ -1,4 +1,5 @@
 from apps.base.util import clonarCarpetaCompartida, validarCompartido
+from apps.file.api.serializers.file_serializers import FileDetalleShareSerializer
 from apps.folder.api.serializers.folder_serializer import FolderDirecotorioListSerializer, FolderDirecotorioListShareSerializer
 from apps.folder.models import Folder
 from apps.share.api.serializers.fileShare_serializers import FileShareCreateSerializer
@@ -14,13 +15,13 @@ from rest_framework import viewsets
 class FolderShareCloneViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = FolderShareClonarSerializer
     def get_queryset(self,pk):
-        return self.get_serializer().Meta.model.objects.get(slug = pk)
+        return self.get_serializer().Meta.model.objects.get(slug = pk,eliminado=False)
     def retrieve(self,request,pk):
         folderResult = self.get_queryset(pk)
         if folderResult:
             if not validarCompartido(folderResult.slug,False,self.userFull.id):
                 return Response({'error':'La carpeta solicitada no esta disponible'},status = status.HTTP_401_UNAUTHORIZED)
-            if Folder.objects.filter(nombre = folderResult.nombre):
+            if Folder.objects.filter(user_id = self.userFull.id,scope=False,nombre = folderResult.nombre):
                 return Response({'error':'La carpeta ya existe'},status = status.HTTP_400_BAD_REQUEST)
             folderMaster = Folder.objects.filter(scope = False,
                                                 unidadArea_id = self.userFull.unidadArea_id,
@@ -34,9 +35,9 @@ class FolderShareViewSet(Authentication,viewsets.GenericViewSet):
 
     def get_queryset(self,pk = None):
         if pk is None:
-            return Folder.objects.filter(foldershare__estado = True,foldershare__userTo_id = self.userFull.id)
+            return Folder.objects.filter(eliminado=False,foldershare__estado = True,foldershare__userTo_id = self.userFull.id)
         else:
-            return Folder.objects.filter(slug = pk)
+            return Folder.objects.filter(slug = pk,eliminado=False,)
     def create(self,request):
         
         folderShareSerializer = self.get_serializer(data = request.data,context = {'userId':self.userFull.id,'unidadId':self.userFull.unidadArea_id})
@@ -61,7 +62,7 @@ class FolderShareViewSet(Authentication,viewsets.GenericViewSet):
         return Response(folderShareSerializer.errors,status = status.HTTP_400_BAD_REQUEST)
     def list(self,request):
         folderAllShareSerialiser = FolderDirecotorioListShareSerializer(self.get_queryset(),many = True,context = {'userId':self.userFull.id,'userStaff': 5})
-        files = FileShareCreateSerializer(File.objects.filter(fileshare__estado = True,fileshare__userTo_id = self.userFull.id),many = True)   
+        files = FileDetalleShareSerializer(File.objects.filter(fileshare__estado = True,fileshare__userTo_id = self.userFull.id),many = True)   
         arbol = TreeFolderSerializer(self.get_queryset(),many = True)
         #return Response(folderAllShareSerialiser.data,status = status.HTTP_200_OK)
         return Response({
