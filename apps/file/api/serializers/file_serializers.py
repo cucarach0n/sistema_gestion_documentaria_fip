@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from apps.etiqueta.api.serializers.etiqueta_serializers import EtiquetaListSerializer
 from apps.etiqueta.models import Etiqueta
+from apps.share.models import FileShare, FolderShare
+from apps.users.api.serializers.user_serializers import UserFileShareSerializer, UserShareSerializer
 from rest_framework import serializers
 from apps.file.models import File, FileInFolder, Folder
 import os
@@ -110,7 +112,11 @@ class FileDetalleShareSerializer(serializers.ModelSerializer):
         else:
             rutaLogica = "?"
             ruta = "?"
-        
+        fileShareUser = FileShare.objects.filter(userTo_id = self.context['userId'],file_id = instance.id).select_related('userFrom').first()
+        if fileShareUser:
+            userSerializer = UserFileShareSerializer(fileShareUser).data
+        else:
+            userSerializer = {}
         #print(folder)
         return{
             'nombre':instance.nombreDocumento,
@@ -123,6 +129,7 @@ class FileDetalleShareSerializer(serializers.ModelSerializer):
             'url':"{0}/file/ver/{1}/".format(config("URL_SERVER"),instance.slug),
             'tags':tag_serializer.data,
             'etiquetas':etiqueta_serializer.data,
+            'userFrom':userSerializer,
             'fechaCreacion':fileinfolder.fechaCreacion,
             'fechaUpdate':fileinfolder.fechaUpdate
         }

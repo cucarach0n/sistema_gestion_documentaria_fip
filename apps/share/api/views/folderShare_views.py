@@ -62,7 +62,9 @@ class FolderShareViewSet(Authentication,viewsets.GenericViewSet):
         return Response(folderShareSerializer.errors,status = status.HTTP_400_BAD_REQUEST)
     def list(self,request):
         folderAllShareSerialiser = FolderDirecotorioListShareSerializer(self.get_queryset(),many = True,context = {'userId':self.userFull.id,'userStaff': 5})
-        files = FileDetalleShareSerializer(File.objects.filter(fileshare__estado = True,fileshare__userTo_id = self.userFull.id),many = True)   
+        files = FileDetalleShareSerializer(File.objects.filter(fileshare__estado = True,
+                                                            fileshare__userTo_id = self.userFull.id),
+                                                            many = True,context = {'userId':self.userFull.id})   
         arbol = TreeFolderSerializer(self.get_queryset(),many = True)
         #return Response(folderAllShareSerialiser.data,status = status.HTTP_200_OK)
         return Response({

@@ -1,4 +1,5 @@
 from dataclasses import fields
+from apps.share.models import FileShare, FolderShare
 from rest_framework import serializers
 from apps.users.models import User
 
@@ -57,3 +58,43 @@ class UserDeleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id']
+class UserShareSerializer(serializers.ModelSerializer):
+    ''''userFrom':{
+                'correo':usuarioFrom.userFrom.correo,
+                'nombre':usuarioFrom.userFrom.name,
+                'lastName':usuarioFrom.userFrom.lastName,
+                'unidad':usuarioFrom.userFrom.unidadArea.nombreUnidad,
+                'fechaCompartido':usuarioFrom.fechaCreacion,
+            },'''
+    class Meta:
+        model = FolderShare
+        fields = "__all__"
+
+    def to_representation(self,instance):
+        return {
+            'correo':instance.userFrom.correo,
+            'nombre':instance.userFrom.name,
+            'lastName':instance.userFrom.last_name,
+            'unidad':instance.userFrom.unidadArea.nombreUnidad,
+            'fechaCompartido':instance.fechaCreacion
+        }
+class UserFileShareSerializer(serializers.ModelSerializer):
+    ''''userFrom':{
+                'correo':usuarioFrom.userFrom.correo,
+                'nombre':usuarioFrom.userFrom.name,
+                'lastName':usuarioFrom.userFrom.lastName,
+                'unidad':usuarioFrom.userFrom.unidadArea.nombreUnidad,
+                'fechaCompartido':usuarioFrom.fechaCreacion,
+            },'''
+    class Meta:
+        model = FileShare
+        fields = "__all__"
+
+    def to_representation(self,instance):
+        return {
+            'correo':instance.userFrom.correo,
+            'nombre':instance.userFrom.name,
+            'lastName':instance.userFrom.last_name,
+            'unidad':instance.userFrom.unidadArea.nombreUnidad,
+            'fechaCompartido':instance.fechaCreacion
+        }

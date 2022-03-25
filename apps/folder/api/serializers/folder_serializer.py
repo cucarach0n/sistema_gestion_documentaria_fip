@@ -1,4 +1,5 @@
 from apps.share.models import FolderShare
+from apps.users.api.serializers.user_serializers import UserShareSerializer
 from rest_framework import serializers
 from apps.folder.models import Folder,FolderInFolder
 from apps.file.models import File
@@ -180,13 +181,17 @@ class FolderDirecotorioListShareSerializer(serializers.ModelSerializer):
 
 
         folder = FolderDetailShareSerializer(folderQuery,many = True)
-        files = FileDetalleShareSerializer(fileQuery,many = True,context = {'padre':instance.id})
+        files = FileDetalleShareSerializer(fileQuery,many = True,context = {'userId':self.context['userId']})
         ruta = obtenerRuta(instance.id,[instance.slug],False)
         rutaLogica = obtenerRuta(instance.id,[instance.nombre],True)
         newRuta,newrutaLogica = crearRutaCompartida(ruta,rutaLogica) 
         treeArbolSerializer = TreeFolderSerializer(folderQuery,many = True)
 
-        #usuarioFrom = FolderShare.objects.filter(userFrom_id = self.context['userId'],folder_id = instance.id)
+        folderShareUser = FolderShare.objects.filter(userTo_id = self.context['userId'],folder_id = instance.id).select_related('userFrom').first()
+        if folderShareUser:
+            userSerializer = UserShareSerializer(folderShareUser).data
+        else:
+            userSerializer = {}
         return {
             'slug':instance.slug,
             'nombre':instance.nombre,
@@ -196,6 +201,7 @@ class FolderDirecotorioListShareSerializer(serializers.ModelSerializer):
             'fechaUpdate':instance.fechaUpdate,
             'subdirectorios': folder.data,
             'files':files.data,
+            'userFrom':userSerializer,
             'treefolders':treeArbolSerializer.data
         }
 class FolderTrashListSerializer(serializers.ModelSerializer):

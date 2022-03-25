@@ -75,7 +75,7 @@ class FileShareViewSet(Authentication,viewsets.GenericViewSet):
         
         fileResult = self.get_queryset(pk)
         if fileResult:
-            fileSerializer = FileDetalleShareSerializer(fileResult,many = True)      
+            fileSerializer = FileDetalleShareSerializer(fileResult,many = True,context = {'userId':self.userFull.id})      
             return Response(fileSerializer.data,status = status.HTTP_200_OK)
         return Response({'error':'El file no existe o no tiene acceso'},status = status.HTTP_400_BAD_REQUEST)
             
