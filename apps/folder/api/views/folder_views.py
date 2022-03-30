@@ -123,8 +123,6 @@ class FolderViewSet(Authentication,viewsets.GenericViewSet):
         return Response(folders.data,status = status.HTTP_200_OK)
     def retrieve(self,request,pk=None):
         folder = self.get_queryset(pk)
-        
-
         if folder:
             '''if not folder.first().scope:
                 return Response({'error':'La carpeta solicitada no es accesible'},status = status.HTTP_401_UNAUTHORIZED)'''

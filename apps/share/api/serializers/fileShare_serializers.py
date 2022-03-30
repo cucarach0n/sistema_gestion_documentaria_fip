@@ -24,6 +24,8 @@ class FileShareCreateSerializer(serializers.Serializer):
                 raise serializers.ValidationError('La carpeta contenedora es privada, no se puede compartir')
             file = File.objects.filter(slug = value,unidadArea_id = self.context['unidadId']).first()
             if file:
+                if FileShare.objects.filter(estado=True, userTo_id = User.objects.get(correo=self.context['userTo']).id, file_id = file.id):
+                    raise serializers.ValidationError('El file ya se encuentra compartido')
                 return file.id
             raise serializers.ValidationError('El documento no existe')
         raise serializers.ValidationError('No existe el file o es privado') 

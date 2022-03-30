@@ -123,7 +123,6 @@ def setDestruirHijos(foldeSlug):
     rutaFile = settings.MEDIA_ROOT+'files/'
     folderResult = Folder.objects.get(slug = foldeSlug)
     files = File.objects.filter(fileinfolder__parent_folder_id = folderResult.id)
-    print(files)
     for file in files:
         os.remove(os.path.join(rutaFile+file.documento_file.name))
     File.objects.filter(fileinfolder__parent_folder_id = folderResult.id).delete()
@@ -238,7 +237,7 @@ class DocumentoOCR():
             imagenesRutas.append(filename)
             page.save(settings.MEDIA_ROOT+'test/'+filename, 'JPEG')
             image_counter = image_counter + 1
-        del pages
+        #del pages
         filelimit = image_counter-1
         textGenerado = ""
     

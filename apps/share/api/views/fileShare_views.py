@@ -49,7 +49,9 @@ class FileShareViewSet(Authentication,viewsets.GenericViewSet):
         else:
             return File.objects.filter(fileshare__estado = True,fileshare__file__slug = pk,fileshare__userTo__id = self.userFull.id)
     def create(self,request):
-        fileShareSerializer = self.get_serializer(data = request.data,context = {'userId':self.userFull.id,'unidadId':self.userFull.unidadArea_id})
+        fileShareSerializer = self.get_serializer(data = request.data,context = {'userId':self.userFull.id,
+                                                                                'unidadId':self.userFull.unidadArea_id,
+                                                                                'userTo':request.data['correoTo']})
         if fileShareSerializer.is_valid():
             fileShareValidateSerializer = FileShareValidateCreateSerializer(data = {
                 'file':fileShareSerializer.validated_data['slugFile'],

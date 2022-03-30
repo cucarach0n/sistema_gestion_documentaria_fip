@@ -40,7 +40,9 @@ class FolderShareViewSet(Authentication,viewsets.GenericViewSet):
             return Folder.objects.filter(slug = pk,eliminado=False,)
     def create(self,request):
         
-        folderShareSerializer = self.get_serializer(data = request.data,context = {'userId':self.userFull.id,'unidadId':self.userFull.unidadArea_id})
+        folderShareSerializer = self.get_serializer(data = request.data,context = {'userId':self.userFull.id,
+                                                                                    'unidadId':self.userFull.unidadArea_id,
+                                                                                    'userTo':request.data['correoTo']})
         if folderShareSerializer.is_valid():
             #if Folder.objects.filter(carpeta_hija__isnull =True,unidadArea_id = self.userFull.unidadArea_id,slug = folderShareSerializer.validated_data['slugFolder']):
             #    return Response({'mensaje':'Esta carpeta no se puede compartir'},status = status.HTTP_401_UNAUTHORIZED)
@@ -63,7 +65,7 @@ class FolderShareViewSet(Authentication,viewsets.GenericViewSet):
     def list(self,request):
         folderAllShareSerialiser = FolderDirecotorioListShareSerializer(self.get_queryset(),many = True,context = {'userId':self.userFull.id,'userStaff': 5})
         files = FileDetalleShareSerializer(File.objects.filter(fileshare__estado = True,
-                                                            fileshare__userTo_id = self.userFull.id),
+                                                            fileshare__userTo_id = self.userFull.id,eliminado = False),
                                                             many = True,context = {'userId':self.userFull.id})   
         arbol = TreeFolderSerializer(self.get_queryset(),many = True)
         #return Response(folderAllShareSerialiser.data,status = status.HTTP_200_OK)

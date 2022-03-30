@@ -8,9 +8,9 @@ from apps.base.util import obtenerRuta
 from apps.folder.api.serializers.treefolder_serializer import TreeFolderSerializer
 from django.db.models import Q
 
-def crearRutaCompartida(ruta,rutaLogica):
-    newRuta = 'Carpeta compartida'
-    newrutaLogica = 'Carpeta compartida'
+def crearRutaCompartida(ruta,rutaLogica,newNameFolder = "Carpeta compartida"):
+    newRuta = newNameFolder
+    newrutaLogica = newNameFolder
     for i in range(1,len(ruta.split('>'))):
         newRuta += ' > ' + ruta.split('>')[i]
     for i in range(1,len(rutaLogica.split('>'))):
@@ -217,7 +217,33 @@ class FolderTrashListSerializer(serializers.ModelSerializer):
         files = FileDetalleSerializer(fileQuery,many = True,context = {'padre':instance.id})
         ruta = obtenerRuta(instance.id,[instance.slug],False)
         rutaLogica = obtenerRuta(instance.id,[instance.nombre],True)
-        newRuta,newrutaLogica = crearRutaCompartida(ruta,rutaLogica) 
+        newRuta,newrutaLogica = crearRutaCompartida(ruta,rutaLogica,'Papelera Privada') 
+        treeArbolSerializer = TreeFolderSerializer(folderQuery,many = True)
+        return {
+            'slug':instance.slug,
+            'nombre':instance.nombre,
+            'rutaLogica': newrutaLogica.replace('  '," "),
+            'rutaSlug': newRuta.replace('  '," "),
+            'fechaCreacion':instance.fechaCreacion,
+            'fechaUpdate':instance.fechaUpdate,
+            'subdirectorios': folder.data,
+            'files':files.data,
+            'treefolders':treeArbolSerializer.data
+        }
+class FolderTrashPublicListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Folder
+        fields = "__all__"
+    def to_representation(self,instance):
+        folderQuery = Folder.objects.filter(scope = True,carpeta_hija__parent_folder_id = instance.id,eliminado =True)
+        fileQuery = File.objects.filter(scope = True,fileinfolder__parent_folder__id =instance.id,eliminado =True)
+
+        folder = FolderDetailShareSerializer(folderQuery,many = True)
+        files = FileDetalleSerializer(fileQuery,many = True,context = {'padre':instance.id})
+        ruta = obtenerRuta(instance.id,[instance.slug],False)
+        rutaLogica = obtenerRuta(instance.id,[instance.nombre],True)
+        newRuta,newrutaLogica = crearRutaCompartida(ruta,rutaLogica,'Papelera Publica') 
         treeArbolSerializer = TreeFolderSerializer(folderQuery,many = True)
         return {
             'slug':instance.slug,

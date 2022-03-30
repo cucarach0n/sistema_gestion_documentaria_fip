@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import re
 from apps.file.models import File, FileInFolder
 from apps.folder.models import Folder
 from rest_framework.response import Response
@@ -85,11 +84,22 @@ def extraerExtencion(Archivo):
         ext =''.join(path.suffixes)[1:]
         aplication = ''
         return ext,aplication
+def normalisarNameDocument(nameFile):
+    caracteres = "%()$&#~`+^*=,;°"
+    #caracteres = "!#$%^&*()"
+    for caracteres in caracteres:
+        nameFile = nameFile.replace(caracteres,'')
+    nameFile = nameFile.replace(" ","_")
+    return nameFile
+        
 def saveFile(self,request,documento_serializer,scope):
     #current_site = get_current_site(request).domain
     ruta = settings.MEDIA_ROOT+'files/'
     fs = FileSystemStorage(location=ruta)
-    nameFile = request.FILES['documento_file'].name.replace(" ","_")
+    
+    #nameFile = request.FILES['documento_file'].name.replace(" ","_")
+    nameFile = normalisarNameDocument(request.FILES['documento_file'].name)
+    print(nameFile)
     file = fs.save(nameFile,request.FILES['documento_file'])
     fileurl = fs.get_valid_name(file)
     #documento_serializer.validated_data['documento_file'] = doc
@@ -107,7 +117,7 @@ def saveFile(self,request,documento_serializer,scope):
     documento.unidadArea_id = self.userFull.unidadArea_id
     #mensaje = "Documento cargado exitosamente"
     #documentoOcr = DocumentoOCR(fileurl)
-    textPDF = obtenerTextoPDF("/"+fileurl)
+    textPDF = '' #obtenerTextoPDF("/"+fileurl)
     #documento.contenidoOCR = textPDF #documentoOcr.obtenerTexto()
     documento.save()
     #set history unidadArea

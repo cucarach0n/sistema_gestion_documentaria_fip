@@ -1,3 +1,4 @@
+from apps.file.api.views.file_trash_views import FileDeletePublicAPIView, FileRestaurarPublicAPIView
 from rest_framework.routers import DefaultRouter
 from apps.file.api.views.file_views import (FileViewSet,
                                             FileObtenerViewSet,
@@ -23,4 +24,7 @@ router.register(r'obtener',FileListViewSet, basename =  'FileObtener-view')
 router.register(r'history',FileHistoryAPIView, basename =  'historyFile-view')
 router.register(r'eliminarFile',FileDeleteAPIView, basename =  'eliminarFile-view')
 router.register(r'restaurarFile',FileRestaurarAPIView, basename =  'restaurarFile-view')
+#trash publico
+router.register(r'eliminarFilePublic',FileDeletePublicAPIView, basename =  'eliminarFilePublic-view')
+router.register(r'restaurarFilePublic',FileRestaurarPublicAPIView, basename =  'restaurarFilePublic-view')
 urlpatterns = router.urls
