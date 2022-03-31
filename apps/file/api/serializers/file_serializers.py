@@ -33,7 +33,7 @@ class FileFolderCreateSerializer(serializers.Serializer):
     #unidadareaid = serializers.CharField()
 
     def validate_nombreDocumento(self,value):
-        if File.objects.filter(nombreDocumento = value):
+        if File.objects.filter(nombreDocumento = value,fileinfolder__parent_folder__slug = self.context['folderSlug']):
             raise serializers.ValidationError("Ya existe un file con este nombre")
         return value
 
@@ -149,6 +149,19 @@ class FileBuscarSerializer(serializers.Serializer):
     history_change_reason = serializers.CharField()
     history_type = serializers.CharField()
     history_user_id = serializers.IntegerField()'''
+class FileBuscarAvanzadoSerializer(serializers.Serializer):
+    tipoDoc = serializers.CharField(allow_blank=True)
+    nombreDoc = serializers.CharField(allow_blank=True)
+    numeroExpediente=serializers.CharField(allow_blank=True)
+    numeroCompra=serializers.CharField(allow_blank=True)
+    numeroServicio = serializers.CharField(allow_blank=True)
+    carpetaNombre = serializers.CharField(allow_blank=True)
+    fechaInicio = serializers.DateField(allow_null = True)
+    fechaFin = serializers.DateField(allow_null = True)
+    opcionFecha = serializers.IntegerField(allow_null = True)
+    class Meta:
+        model = File
+
 
 class FileHistorySerializer(serializers.ModelSerializer):
     class Meta:

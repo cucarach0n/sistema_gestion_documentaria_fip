@@ -18,7 +18,7 @@ from apps.base.util import DocumentoOCR, createHistory, setHistory, validarPriva
 import threading
 import PyPDF2
 import pathlib
-
+from docx import Document
 #import pdfplumber
 #from apps.base.pdfConvertPdfMiner import extrarText
 from django.utils.crypto import get_random_string
@@ -41,7 +41,13 @@ def guardarOcr(file,id,idUser,textoExtraido):
     if file.is_valid():  
         fileSave = file.save()
         #set history file
-        setHistory(fileSave,'contenido OCR registrado',idUser)    
+        setHistory(fileSave,'contenido OCR registrado',idUser)
+def extraerTextDocx(pathFile,idFile):
+    doc = Document(pathFile)
+    text =""
+    for paragraph in doc.paragraphs:
+        text += paragraph.text
+    File.objects.filter(id = idFile).update(contenidoOCR = text)
 def extraerExtencion(Archivo):
     '''extension = [["jpg","image/jpg"]
                 ,["jpeg","image/jpeg"]
@@ -128,7 +134,14 @@ def saveFile(self,request,documento_serializer,scope):
         threading_text = threading.Thread(target=guardarOcr,args=("/"+fileurl,documento.id,self.userFull.id,textPDF,))
         threading_text.start()
         #print('Cantidad de threading : ',threading.active_count())
-    
+    if documento.extension == "docx":
+        #extraerTextDocx(ruta + fileurl,documento.id)
+        path = ruta + fileurl
+        threading_docx = threading.Thread(target=extraerTextDocx,args=(path,documento.id,))
+        threading_docx.start()
+        '''doc = Document(ruta + fileurl)
+        for paragraph in doc.paragraphs:
+            print(paragraph.text)'''
     #print(documento)
     fileDetalleSerializer = FileDetalleSerializer(documento)
     #print(fileDetalleSerializer)
@@ -296,7 +309,7 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
     
 
     def create(self,request):
-        documento_serializer = self.serializer_class(data = request.data)
+        documento_serializer = self.serializer_class(data = request.data,context ={"folderSlug":request.data['directorioslug']})
         
         if documento_serializer.is_valid():
             folderResult = Folder.objects.filter(slug = documento_serializer.validated_data['directorioslug'],unidadArea_id = self.userFull.unidadArea_id,eliminado = False)
@@ -441,6 +454,7 @@ class FileBuscarAPIView(Authentication,viewsets.GenericViewSet):
                                                                 Q(filetag__tag__tagName__icontains = data['buscar'],scope =True,eliminado = False)| 
                                                                 Q(etiqueta__nombre__icontains = data['buscar'],scope =True,eliminado = False)
                                                                 ,unidadArea_id = self.userFull.unidadArea_id,eliminado = False).distinct()
+
     def create(self,request):
         file_serializer = self.get_serializer(data = request.data)
         if file_serializer.is_valid():

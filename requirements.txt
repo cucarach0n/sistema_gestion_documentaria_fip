@@ -18,6 +18,7 @@ idna==3.3
 inflection==0.5.1
 itypes==1.2.0
 Jinja2==3.0.3
+lxml==4.8.0
 MarkupSafe==2.0.1
 mysqlclient==2.1.0
 packaging==21.3
@@ -32,6 +33,7 @@ pyparsing==3.0.7
 PyPDF2==1.26.0
 pytesseract==0.3.8
 python-decouple==3.5
+python-docx==0.8.11
 pytz==2021.3
 requests==2.27.1
 ruamel.yaml==0.17.20
