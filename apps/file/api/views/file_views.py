@@ -105,7 +105,6 @@ def saveFile(self,request,documento_serializer,scope):
     
     #nameFile = request.FILES['documento_file'].name.replace(" ","_")
     nameFile = normalisarNameDocument(request.FILES['documento_file'].name)
-    print(nameFile)
     file = fs.save(nameFile,request.FILES['documento_file'])
     fileurl = fs.get_valid_name(file)
     #documento_serializer.validated_data['documento_file'] = doc
@@ -307,7 +306,7 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
         return Response(documento_serializer.data,status = status.HTTP_200_OK)
     '''
     
-
+    #post
     def create(self,request):
         documento_serializer = self.serializer_class(data = request.data,context ={"folderSlug":request.data['directorioslug']})
         

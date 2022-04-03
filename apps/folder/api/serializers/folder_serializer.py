@@ -1,3 +1,4 @@
+from multiprocessing import context
 from apps.share.models import FolderShare
 from apps.users.api.serializers.user_serializers import UserShareSerializer
 from rest_framework import serializers
@@ -7,6 +8,7 @@ from apps.file.api.serializers.file_serializers import FileDetalleSerializer, Fi
 from apps.base.util import obtenerRuta
 from apps.folder.api.serializers.treefolder_serializer import TreeFolderSerializer
 from django.db.models import Q
+from django.utils.crypto import get_random_string
 
 def crearRutaCompartida(ruta,rutaLogica,newNameFolder = "Carpeta compartida"):
     newRuta = newNameFolder
@@ -35,6 +37,7 @@ class FolderDetailSerializer(serializers.ModelSerializer):
             'fechaUpdate':instance.fechaUpdate,
             'publico':instance.scope
         }
+
 class FolderDetailShareSerializer(serializers.ModelSerializer):
     class Meta:
         model = Folder
@@ -82,15 +85,34 @@ class FolderListSerializer(serializers.ModelSerializer):
     def validate_nombre(self,value):
         #print(value)  
         #print(self.context.id)
-        folders = FolderInFolder.objects.filter(child_folder_name = value,parent_folder_id = self.context.id).first()
+        folders = FolderInFolder.objects.filter(child_folder__nombre = value,
+                                                child_folder__eliminado = False,
+                                                parent_folder_id = self.context.id,
+                                                parent_folder__eliminado = False).first()
         #print(folders)
         if folders is None:
             return value
         else:
             raise serializers.ValidationError('Error, ya existe este directorio en la carpeta raiz')  
+    def validate(self,data):
+        return data
+class FolderListUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Folder
+        exclude = ('slug','user',)
+    def validate_nombre(self,value):
+        #print(value)  
+        #print(self.context.id)
 
-            
-
+        folders = FolderInFolder.objects.filter(child_folder__nombre = value,
+                                                child_folder__eliminado = False,
+                                                parent_folder_id = self.context.id,
+                                                parent_folder__eliminado = False).first()
+        #print(folders)
+        if folders is None:
+            return value
+        else:
+            raise serializers.ValidationError('Error, ya existe este directorio en la carpeta raiz') 
     def validate(self,data):
         return data
 

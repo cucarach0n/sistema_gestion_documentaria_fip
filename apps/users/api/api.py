@@ -45,7 +45,7 @@ class verAvatar(Authentication,APIView):
 
 class UserAPIView(APIView):
     def get(self,request):
-        users = User.objects.all()
+        users = User.objects.filter(is_superuser = False)
         users_serializer = UserSerializer(users,many = True)
         return Response(users_serializer.data, status = status.HTTP_200_OK )
 def createCarpetaPrivadaUser(unidadAreaId,user):
@@ -141,4 +141,15 @@ class userDeleteAPIView(Authentication,generics.DestroyAPIView):
             return Response(userSerializer.errors,status = status.HTTP_400_BAD_REQUEST) 
 
 
-
+    def update(self,request,pk = None):
+        userSerializer = self.get_serializer(data = request.data)
+        if userSerializer.is_valid():
+            if self.userFull.is_superuser:
+                userResult = self.get_queryset(pk)
+                userResult.is_active = False
+                userResult.save()
+                return Response({'Mensaje':'Usuario inhabilitado correctamente'},status = status.HTTP_200_OK)
+            else:
+                return Response({'Error':'No tiene permitido realizar esta accion'},status = status.HTTP_400_BAD_REQUEST)  
+        else:
+            return Response(userSerializer.errors,status = status.HTTP_400_BAD_REQUEST) 

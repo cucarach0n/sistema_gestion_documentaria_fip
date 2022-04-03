@@ -25,6 +25,11 @@ class FolderInFolderValidateCreateSerializer(serializers.Serializer):
         #    raise serializers.ValidationError('El nombre de usuario no puede ser igual a la contrasena')
         #print('Folder validado')
         return data
+class FolderInFolderUploadCreateSerializer(serializers.Serializer):
+    pathFolder = serializers.CharField()
+    padreSlug = serializers.CharField(max_length=11)
+    def validate(self,data):
+        return data
 class FolderInFolderSerializer(serializers.ModelSerializer):
     #parent_folder = Folder_Serializer()
     class Meta:

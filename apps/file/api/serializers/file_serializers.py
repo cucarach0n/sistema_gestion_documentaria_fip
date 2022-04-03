@@ -12,7 +12,7 @@ from hurry.filesize import size, si
 from apps.tag.api.serializers.tag_serializer import TagListSerializer
 from apps.tag.models import Tag
 from decouple import config
-
+from django.utils.crypto import get_random_string
 def crearRutaCompartida(ruta,rutaLogica):
     newRuta = 'Carpeta compartida'
     newrutaLogica = 'Carpeta compartida'
@@ -33,8 +33,10 @@ class FileFolderCreateSerializer(serializers.Serializer):
     #unidadareaid = serializers.CharField()
 
     def validate_nombreDocumento(self,value):
+        '''if File.objects.filter(nombreDocumento = value,fileinfolder__parent_folder__slug = self.context['folderSlug']):
+            raise serializers.ValidationError("Ya existe un file con este nombre")'''
         if File.objects.filter(nombreDocumento = value,fileinfolder__parent_folder__slug = self.context['folderSlug']):
-            raise serializers.ValidationError("Ya existe un file con este nombre")
+            return value + "_" + get_random_string(length=3)
         return value
 
     def create(self,validated_data):

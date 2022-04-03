@@ -1,4 +1,5 @@
 from apps.folder.api.views.folder_trash_views import FolderQuitPublicAPIView, FolderRestaurarPublicAPIView, FolderTrashPublicAPIView
+from apps.folder.api.views.folder_upload_views import FolderInFolderUploadViewSet
 from rest_framework.routers import DefaultRouter
 from apps.folder.api.views.folder_in_folder_views import FolderInFolderViewSet,FolderInFolderPrivateViewSet
 from apps.folder.api.views.folder_views import (
@@ -31,4 +32,6 @@ router.register(r'restaurarFolder',FolderRestaurarAPIView, basename =  'folderTr
 router.register(r'eliminarFolderPublic',FolderQuitPublicAPIView, basename =  'folderTrashDeletePublic-view')
 router.register(r'papeleraPublic',FolderTrashPublicAPIView, basename =  'folderTrashListPublic-view')
 router.register(r'restaurarFolderPublic',FolderRestaurarPublicAPIView, basename =  'folderTrashRestaurarPublic-view')
+
+router.register(r'createPath',FolderInFolderUploadViewSet, basename =  'createPath-view')
 urlpatterns = router.urls

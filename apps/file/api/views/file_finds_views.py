@@ -30,7 +30,6 @@ def generarRangoFecha(opcion):
         newFecha = today - timedelta(days=30)
     rango.append(newFecha)
     rango.append(today)
-    print(rango)
     return rango
         
 
@@ -64,7 +63,6 @@ class FileBuscarAvanzadoAPIView(Authentication,viewsets.GenericViewSet):
                                                                 fileinfolder__parent_folder__nombre__icontains = data['carpetaNombre'],
                                                                 fileinfolder__fechaCreacion__date__range = [rango[0],rango[1]]).order_by('fileinfolder__fechaCreacion').distinct()
         '''else:
-
             return self.get_serializer().Meta.model.objects.filter(Q(nombreDocumento__icontains = data['nombreDoc'])| 
                                                                 Q(contenidoOCR__icontains = data['numeroExpediente'])| 
                                                                 Q(contenidoOCR__icontains = data['numeroCompra'])| 
