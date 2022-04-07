@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -7,7 +7,10 @@
     <title>Document</title>
 </head>
 <body>
-    <h1>Hola {{email}} </h1>
-    <p>entra al siguiente link para validar tu cuenta <a href="{{domain}}">Activar cuenta</a></p>
+    <h1>Bienvenido {{usuario.name}}  {{usuario.last_name}}</h1>
+    <p>Se ha creado correctamente tu cuenta de acceso en nuestro sistema de Gestión Documentaria FIP</p>
+    <p>Usuario: {{usuario.correo}}</p>
+    <p>Contraseña: {{password}}
+    <p>Inicia sesion <a href="https://fipdigital.info">aqui</a> y cambia tu contraseña por seguridad </p>
 </body>
 </html>

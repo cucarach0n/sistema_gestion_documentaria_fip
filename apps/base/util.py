@@ -36,14 +36,14 @@ class ASCIIFileSystemStorage(FileSystemStorage):
         return super(ASCIIFileSystemStorage, self).get_valid_name(name)
 
 def send_email(data):
-    context = {'email':data['email'],'domain':data['domain']}
+    context = {'email':data['email'],'domain':data['domain'],'usuario':data['usuario'],'password':data['password']}
     #template = get_template(settings.TEMPLATE_DIRS[0].replace("\\","/")[:64] +'/templates/correo.html')#64 windows / 66 linux
     template = get_template('correo.html')
     content = template.render(context)
     email = EmailMultiAlternatives(
-        'Un correo de prueba',
-        'Email de validacion',
-        settings.EMAIL_HOST_USER,
+        'Bienvenido al Sistema de Gestion Documentaria FIP',
+        'Credenciales de acceso para '+ data['usuario'].name +" " + data['usuario'].last_name,
+        "Registro de cuenta FIP <"+settings.EMAIL_HOST_USER+">",
         [data['email']]
     )
 

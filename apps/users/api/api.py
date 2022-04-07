@@ -3,7 +3,7 @@ from apps.users.models import Contrasena_reinicio
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from apps.users.models import User
-from apps.users.api.serializers.user_serializers import UserSerializer,UserCreateSerializer,UserDeleteSerializer
+from apps.users.api.serializers.user_serializers import UserSerializer,UserCreateSerializer,UserDeleteSerializer, UserUpdateSerializer
 from apps.users.api.serializers.general_serializers import Contrasena_reinicioSerializer
 from apps.users.api.serializers.contrasenaReinicio_serializer import ContrasenaReinicioActivateSerializer
 from rest_framework import status
@@ -19,15 +19,15 @@ from apps.users.authenticacion_mixings import Authentication
 
 class verAvatar(Authentication,APIView):
     
-    def get(self,request,avatar=None):
-        print(avatar)
-        usuario = User.objects.filter(avatar = avatar ).first()
+    def get(self,request):
+        usuario = User.objects.filter(id = self.userFull.id ).first()
         if usuario:
             pic = usuario.avatar#56 en linux / 34 windows
-            file_location =  settings.MEDIA_ROOT +"avatars/"+pic.name 
+            #file_location =  settings.MEDIA_ROOT +"avatars/"+pic.name 
+            file_location =  settings.MEDIA_ROOT +pic.name 
             file_location = file_location.replace("\\","/")
             
-            print('Obteniendo foto de ' + file_location)
+            print('Obteniendo foto de ' + usuario.name)
             try:    
                 #with open(file_location, 'r') as f:
                 #    file_data = f.read()
@@ -93,7 +93,7 @@ class UserCreateAPIView(generics.CreateAPIView):
                 
                 absurl = 'https://'+current_site+'/usuario/validar/'+userSendEmail.token
                 #enviar email
-                #send_email({'email':'devalo19@gmail.com','domain': str(absurl)})
+                send_email({'email':'devalo19@gmail.com','domain': str(absurl),'usuario':user,'password':serializer.validated_data['password']})
             userCreadoSerializer = UserSerializer(user)
             if user.is_staff < 3:
                 createCarpetaPrivadaUser(user.unidadArea_id,user)
@@ -153,3 +153,30 @@ class userDeleteAPIView(Authentication,generics.DestroyAPIView):
                 return Response({'Error':'No tiene permitido realizar esta accion'},status = status.HTTP_400_BAD_REQUEST)  
         else:
             return Response(userSerializer.errors,status = status.HTTP_400_BAD_REQUEST) 
+
+
+class userUpdateAPIView(Authentication,generics.UpdateAPIView):
+    serializer_class = UserUpdateSerializer
+    def get_queryset(self):
+        return self.get_serializer().Meta.model.objects.filter(estado = 1,id = self.userFull.id).first()
+
+    def put(self,request):
+        userUpdateSerializer = self.get_serializer(data = request.data)
+        if userUpdateSerializer.is_valid(): 
+            user = self.get_queryset()
+            if user:
+                userUpdate = self.serializer_class(user,data = userUpdateSerializer.validated_data)
+                if userUpdate.is_valid():
+                    user.name = userUpdate.validated_data['name']
+                    user.last_name = userUpdate.validated_data['last_name']
+                    if userUpdate.validated_data['password'] != None and userUpdate.validated_data['password'] != "":
+                        user.set_password(userUpdate.validated_data['password'])
+                    if userUpdate.validated_data['avatar'] != None and userUpdate.validated_data['avatar'] != "":
+                        user.avatar = userUpdate.validated_data['avatar']
+                    user.save()
+                    return Response({'Mensaje':'Usuario actualizado correctamente'},status = status.HTTP_200_OK)
+                return Response(userUpdate.errors,status = status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'Error':'No se puede validar el usario'},status = status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(userUpdateSerializer.errors,status = status.HTTP_400_BAD_REQUEST)

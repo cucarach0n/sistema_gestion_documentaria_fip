@@ -81,7 +81,6 @@ class FolderViewSet(Authentication,viewsets.GenericViewSet):
                                                                         unidadArea_id = self.userFull.unidadArea_id,eliminado = False)
         else:
             try:
-                
                 return self.serializer_class().Meta.model.objects.filter(slug = pk,unidadArea_id = self.userFull.unidadArea_id,eliminado = False)
             except:
                 return None

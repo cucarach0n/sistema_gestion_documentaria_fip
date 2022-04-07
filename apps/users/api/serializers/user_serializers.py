@@ -54,6 +54,25 @@ class UserCreateSerializer(serializers.ModelSerializer):
         user_actualisado.set_password(validated_data['password'])
         user_actualisado.save()
         return user_actualisado
+class UserUpdateSerializer(serializers.Serializer):
+    #history_id = serializers.CharField()
+    name = serializers.CharField()
+    last_name = serializers.CharField()
+    password = serializers.CharField(allow_blank=True)
+    avatar = serializers.ImageField(allow_null=True)
+    class Meta:
+        model = User
+    
+    def validate(self,data):
+        #if data['nombreUsuario'] in data['contrasena']:
+        #    raise serializers.ValidationError('El nombre de usuario no puede ser igual a la contrasena')
+        return data
+    def update(self,instance,validated_data):
+        user_actualisado = super().update(instance,validated_data)
+        if validated_data['password'] != None:
+            user_actualisado.set_password(validated_data['password'])
+        user_actualisado.save()
+        return user_actualisado
 class UserDeleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
