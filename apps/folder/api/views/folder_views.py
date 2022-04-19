@@ -79,8 +79,16 @@ class FolderViewSet(Authentication,viewsets.GenericViewSet):
                 #listar solo la unidad
                 return self.serializer_class().Meta.model.objects.filter(user__is_superuser = True,carpeta_hija__isnull =True,
                                                                         unidadArea_id = self.userFull.unidadArea_id,eliminado = False)
+            elif self.userFull.is_staff == 5:
+                #listar con todas las unidades privadas de los usuario
+                #return self.serializer_class().Meta.model.objects.filter(user__is_superuser = True,carpeta_hija__isnull =True,
+                #                                                        unidadArea_id = self.userFull.unidadArea_id)
+                #listar solo la unidad
+                return self.serializer_class().Meta.model.objects.filter(user__is_superuser = True,carpeta_hija__isnull =True,eliminado = False)
         else:
             try:
+                if self.userFull.is_staff == 5:
+                    return self.serializer_class().Meta.model.objects.filter(slug = pk,eliminado = False)
                 return self.serializer_class().Meta.model.objects.filter(slug = pk,unidadArea_id = self.userFull.unidadArea_id,eliminado = False)
             except:
                 return None
@@ -375,7 +383,8 @@ class FolderBuscarAPIView(Authentication,viewsets.GenericViewSet):
             return self.serializer_class().Meta.model.objects.filter(Q(nombre__icontains = buscar,scope = False,user_id = self.userFull.id,eliminado = False)|
                                                                     Q(nombre__icontains = buscar,scope = True,eliminado = False),
                                                                     unidadArea_id = self.userFull.unidadArea_id,eliminado = False).distinct()
-        return self.serializer_class().Meta.model.objects.filter(nombre__icontains = buscar,unidadArea_id = self.userFull.unidadArea_id,eliminado = False).distinct()
+        #return self.serializer_class().Meta.model.objects.filter(nombre__icontains = buscar,unidadArea_id = self.userFull.unidadArea_id,eliminado = False).distinct()
+        return self.serializer_class().Meta.model.objects.filter(nombre__icontains = buscar,eliminado = False,scope=True).distinct()
     def create(self,request):
         folder_serializer = self.get_serializer(data = request.data)
         if folder_serializer.is_valid():

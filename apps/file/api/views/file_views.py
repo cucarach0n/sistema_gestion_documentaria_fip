@@ -117,6 +117,7 @@ def saveFile(self,request,documento_serializer,scope):
     documento.documento_file = fileurl
     documento.user_id = self.userFull.id
     documento.scope = scope
+    #documento.contenidoOCR = "-"
     documento.extension,application = extraerExtencion(fileurl)
     documento.slug = get_random_string(length=11)
     documento.unidadArea_id = self.userFull.unidadArea_id
@@ -171,53 +172,54 @@ def saveFile(self,request,documento_serializer,scope):
 class FileObtenerViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = FileObtenerSerializer
     def get_queryset(self,pk=None):
-        if pk is None:
-            return None
-        return self.serializer_class().Meta.model.objects.filter(slug=pk,unidadArea_id = self.userFull.unidadArea_id,eliminado = False).first()
-    
+        if self.userFull.is_staff < 3:
+            return self.serializer_class().Meta.model.objects.filter(slug=pk,unidadArea_id = self.userFull.unidadArea_id,eliminado = False).first()
+        return self.serializer_class().Meta.model.objects.filter(slug=pk,eliminado = False).first()
     def retrieve(self,request,pk=None):
 
-        documento_query = self.get_queryset(pk)
-        if documento_query:
-            if validarPrivado(documento_query,self.userFull.id,True):
+        #documento_query = self.get_queryset(pk)
+        #if documento_query:
+        documento = self.get_queryset(pk)
+        
+        '''if not(documento_query.scope == False and documento_query.user_id == self.userFull.id):
+            return Response({'error':'El archivo solicitado es privado'},status = status.HTTP_401_UNAUTHORIZED)'''
+        #if documento_query:
+        #documento = File_Serializer().Meta.model.objects.filter(slug=pk,unidadArea_id = self.userFull.unidadArea_id).first()
+        if documento:
+            if validarPrivado(documento,self.userFull.id,True):
                 return Response({'error':'La carpeta contenedora o el file son privados'},status = status.HTTP_401_UNAUTHORIZED)
-            '''if not(documento_query.scope == False and documento_query.user_id == self.userFull.id):
-                return Response({'error':'El archivo solicitado es privado'},status = status.HTTP_401_UNAUTHORIZED)'''
-            if documento_query:
-                documento = File_Serializer().Meta.model.objects.filter(slug=pk,unidadArea_id = self.userFull.unidadArea_id).first()
-                if documento:
-                    #test copy file####
-                    '''rutaFile = settings.MEDIA_ROOT+'files/'
-                    fileObject = open(rutaFile+documento.documento_file.name, 'rb')
-                    fs = FileSystemStorage(location=rutaFile)
-                    file = fs.save(documento.documento_file.name,fileObject)
-                    nameNewFile = fs.get_valid_name(file)
-                    print(nameNewFile)'''
-                    ###################
-                    print('Sirviendo file {0} al usuario {1}'.format(documento.documento_file.name,self.userFull.correo))
-                    doc = str(documento.documento_file)#56 en linux / 34 windows
-                    file_location =  settings.MEDIA_ROOT + 'files/' + doc 
-                    try:    
-                        #with open(file_location, 'r') as f:
-                        #    file_data = f.read()
-                        file_data = open(file_location, 'rb')
-                        # sending response 
-                        ext,app = extraerExtencion(str(documento.documento_file))#56 en linux/ 34 windows
-                        
-                        response = FileResponse(file_data, content_type=app)
-                    
-                        #response['Content-Length'] = file_data.size
-                        response['Content-Disposition'] = 'attachment; filename="'+str(documento.documento_file)+'"'#56 en linux/ 34 windows
-                        #create history
-                        createHistory(File,documento.id,"Documento " + documento.documento_file.name + " visto","v",self.userFull.id)
-                    except:
-                        # handle file not exist case here
-                        response = Response({'error':'Hubo un error al obtener el archivo'},status = status.HTTP_400_BAD_REQUEST)
-                    return response
-                response = Response({'error':'No existe el documento o archivo solicitado'},status = status.HTTP_404_NOT_FOUND)
+            #test copy file####
+            '''rutaFile = settings.MEDIA_ROOT+'files/'
+            fileObject = open(rutaFile+documento.documento_file.name, 'rb')
+            fs = FileSystemStorage(location=rutaFile)
+            file = fs.save(documento.documento_file.name,fileObject)
+            nameNewFile = fs.get_valid_name(file)
+            print(nameNewFile)'''
+            ###################
+            print('Sirviendo file {0} al usuario {1}'.format(documento.documento_file.name,self.userFull.correo))
+            doc = str(documento.documento_file)#56 en linux / 34 windows
+            file_location =  settings.MEDIA_ROOT + 'files/' + doc 
+            try:    
+                #with open(file_location, 'r') as f:
+                #    file_data = f.read()
+                file_data = open(file_location, 'rb')
+                # sending response 
+                ext,app = extraerExtencion(str(documento.documento_file))#56 en linux/ 34 windows
+                
+                response = FileResponse(file_data, content_type=app)
             
-            return Response({'error':'Error al procesar la solicitud'},status = status.HTTP_400_BAD_REQUEST)
-        return Response({'error':'No existe el file'},status = status.HTTP_400_BAD_REQUEST)
+                #response['Content-Length'] = file_data.size
+                response['Content-Disposition'] = 'attachment; filename="'+str(documento.documento_file)+'"'#56 en linux/ 34 windows
+                #create history
+                createHistory(File,documento.id,"Documento " + documento.documento_file.name + " visto","v",self.userFull.id)
+            except:
+                # handle file not exist case here
+                return Response({'error':'Hubo un error al obtener el archivo'},status = status.HTTP_400_BAD_REQUEST)
+            return response
+        return Response({'error':'No existe el documento o archivo solicitado'},status = status.HTTP_404_NOT_FOUND)
+        
+        #return Response({'error':'Error al procesar la solicitud'},status = status.HTTP_400_BAD_REQUEST)
+        #return Response({'error':'No existe el file'},status = status.HTTP_400_BAD_REQUEST)
 class FileListViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = FileUpdateSerializer
 
@@ -225,7 +227,9 @@ class FileListViewSet(Authentication,viewsets.GenericViewSet):
         if pk is None:
             return FileDetalleSerializer.Meta.model.objects.filter(Q(user_id= self.userFull.id,scope = False,unidadArea_id = self.userFull.unidadArea_id,eliminado = False)
                                                                 |Q(scope = True,unidadArea_id = self.userFull.unidadArea_id,eliminado = False)).distinct()
-        return FileDetalleSerializer.Meta.model.objects.filter(slug=pk,unidadArea_id = self.userFull.unidadArea_id,eliminado = False).first()
+        if self.userFull.is_staff < 3:
+            return FileDetalleSerializer.Meta.model.objects.filter(slug=pk,unidadArea_id = self.userFull.unidadArea_id,eliminado = False).first()
+        return FileDetalleSerializer.Meta.model.objects.filter(slug=pk,eliminado = False).first()
     def list(self,request):
         documento_serializer = FileDetalleSerializer(self.get_queryset(),many = True)
         return Response(documento_serializer.data,status = status.HTTP_200_OK)
@@ -423,7 +427,7 @@ class FileBuscarAPIView(Authentication,viewsets.GenericViewSet):
 
     serializer_class = FileBuscarSerializer
     def get_queryset(self,data):
-        if data['opcion'] == 1:
+        '''if data['opcion'] == 1:
             return self.get_serializer().Meta.model.objects.filter(Q(nombreDocumento__icontains = data['buscar'],scope =False,user_id=self.userFull.id,eliminado = False)| 
                                                                 Q(contenidoOCR__icontains = data['buscar'],scope =False,user_id=self.userFull.id,eliminado = False)|
                                                                 Q(nombreDocumento__icontains = data['buscar'],scope =True,eliminado = False)| 
@@ -452,15 +456,54 @@ class FileBuscarAPIView(Authentication,viewsets.GenericViewSet):
                                                                 Q(contenidoOCR__icontains = data['buscar'],scope =True,eliminado = False)| 
                                                                 Q(filetag__tag__tagName__icontains = data['buscar'],scope =True,eliminado = False)| 
                                                                 Q(etiqueta__nombre__icontains = data['buscar'],scope =True,eliminado = False)
-                                                                ,unidadArea_id = self.userFull.unidadArea_id,eliminado = False).distinct()
+                                                                ,unidadArea_id = self.userFull.unidadArea_id,eliminado = False).distinct()'''
+        if self.userFull.is_staff < 3:
+            if data['opcion'] == 1:
+                return self.get_serializer().Meta.model.objects.filter(Q(nombreDocumento__icontains = data['buscar'])| 
+                                                                    Q(contenidoOCR__icontains = data['buscar'])
+                                                                    ,Q(scope = True)|Q(scope = False, user_id = self.userFull.id),
+                                                                    unidadArea_id = self.userFull.unidadArea_id,eliminado = False).distinct()
+            elif data['opcion'] == 2:
+                return self.get_serializer().Meta.model.objects.filter(Q(filetag__tag__tagName__icontains = data['buscar'])
+                                                                    ,Q(scope = True)|Q(scope = False, user_id = self.userFull.id),
+                                                                    unidadArea_id = self.userFull.unidadArea_id,eliminado = False).distinct()
 
+            elif data['opcion'] == 3:
+                return self.get_serializer().Meta.model.objects.filter(Q(etiqueta__nombre__icontains = data['buscar'])
+                                                                    ,Q(scope = True)|Q(scope = False, user_id = self.userFull.id),
+                                                                    unidadArea_id = self.userFull.unidadArea_id,eliminado = False).distinct()
+            elif data['opcion'] == 4:
+                return self.get_serializer().Meta.model.objects.filter(Q(nombreDocumento__icontains = data['buscar'])| 
+                                                                    Q(contenidoOCR__icontains = data['buscar'])| 
+                                                                    Q(filetag__tag__tagName__icontains = data['buscar'])| 
+                                                                    Q(etiqueta__nombre__icontains = data['buscar'])
+                                                                    ,Q(scope = True)|Q(scope = False, user_id = self.userFull.id),
+                                                                    unidadArea_id = self.userFull.unidadArea_id,eliminado = False).distinct()
+        
+        if data['opcion'] == 1:
+            return self.get_serializer().Meta.model.objects.filter(Q(nombreDocumento__icontains = data['buscar'])| 
+                                                                Q(contenidoOCR__icontains = data['buscar'])
+                                                                ,scope = True,eliminado = False).distinct()
+        elif data['opcion'] == 2:
+            return self.get_serializer().Meta.model.objects.filter(Q(filetag__tag__tagName__icontains = data['buscar'])
+                                                                ,scope = True,eliminado = False).distinct()
+
+        elif data['opcion'] == 3:
+            return self.get_serializer().Meta.model.objects.filter(Q(etiqueta__nombre__icontains = data['buscar'])
+                                                                ,scope = True,eliminado = False).distinc()
+        elif data['opcion'] == 4:
+            return self.get_serializer().Meta.model.objects.filter(Q(nombreDocumento__icontains = data['buscar'])| 
+                                                                Q(contenidoOCR__icontains = data['buscar'])| 
+                                                                Q(filetag__tag__tagName__icontains = data['buscar'])| 
+                                                                Q(etiqueta__nombre__icontains = data['buscar'])
+                                                                ,scope = True,eliminado = False).distinct()
     def create(self,request):
-        file_serializer = self.get_serializer(data = request.data)
-        if file_serializer.is_valid():
-            fileBusqueda_serializer = FileDetalleSerializer(self.get_queryset(file_serializer.data),many = True)
-            return Response(fileBusqueda_serializer.data,status = status.HTTP_200_OK)
-        else:
-            return Response(file_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
+            file_serializer = self.get_serializer(data = request.data)
+            if file_serializer.is_valid():
+                fileBusqueda_serializer = FileDetalleSerializer(self.get_queryset(file_serializer.data),many = True)
+                return Response(fileBusqueda_serializer.data,status = status.HTTP_200_OK)
+            else:
+                return Response(file_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
 class FileHistoryAPIView(Authentication,viewsets.GenericViewSet):
     serializer_class = FileHistorySerializer
     def get_queryset(self,pk=None):

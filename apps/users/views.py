@@ -24,12 +24,15 @@ class UserToken(Authentication,APIView):
             if self.userFull.is_superuser == False:
                 print('no es admin')
                 folder = Folder.objects.filter(carpeta_hija__isnull =True,unidadArea_id = self.userFull.unidadArea_id).first()
-                folderMaster = Folder.objects.filter(scope = False,
-                                                    unidadArea_id = self.userFull.unidadArea_id,
-                                                    user_id =self.userFull.id,
-                                                    carpeta_hija__isnull =True).first()
-                nombrePrivado = folderMaster.nombre
-                slugPrivado = folderMaster.slug
+                nombrePrivado = ""
+                slugPrivado = ""
+                if self.userFull.is_staff < 3:
+                    folderMaster = Folder.objects.filter(scope = False,
+                                                        unidadArea_id = self.userFull.unidadArea_id,
+                                                        user_id =self.userFull.id,
+                                                        carpeta_hija__isnull =True).first()
+                    nombrePrivado = folderMaster.nombre
+                    slugPrivado = folderMaster.slug
 
                 nombre = folder.nombre
                 slug = folder.slug

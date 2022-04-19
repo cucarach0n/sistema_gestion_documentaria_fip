@@ -161,13 +161,13 @@ class FolderDirecotorioListSerializer(serializers.ModelSerializer):
                                             Q(scope = True,fileinfolder__parent_folder__id =instance.id,eliminado = False))                              
         elif int(self.context['userStaff']) > 2 and int(self.context['userStaff']) < 5:
             
-            folderQuery = Folder.objects.filter(carpeta_hija__parent_folder_id = instance.id)
-            fileQuery = File.objects.filter(fileinfolder__parent_folder__id =instance.id)
+            folderQuery = Folder.objects.filter(carpeta_hija__parent_folder_id = instance.id, eliminado= False)
+            fileQuery = File.objects.filter(fileinfolder__parent_folder__id =instance.id, eliminado= False)
         #carpetas compartidas
         elif int(self.context['userStaff']) == 5:
             
-            folderQuery = Folder.objects.filter(scope = True,carpeta_hija__parent_folder_id = instance.id)
-            fileQuery = File.objects.filter(scope = True,fileinfolder__parent_folder__id =instance.id)
+            folderQuery = Folder.objects.filter(scope = True,carpeta_hija__parent_folder_id = instance.id, eliminado= False)
+            fileQuery = File.objects.filter(scope = True,fileinfolder__parent_folder__id =instance.id, eliminado= False)
         '''elif int(self.context['userStaff']) == 6:
             
             folderQuery = Folder.objects.filter(scope = False,carpeta_hija__parent_folder_id = instance.id,user_id = self.context['userId'])

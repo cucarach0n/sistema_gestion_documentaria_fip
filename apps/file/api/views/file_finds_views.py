@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from distutils import extension
 from hashlib import new
 from apps.file.api.serializers.file_serializers import FileBuscarAvanzadoSerializer, FileDetalleSerializer
 from rest_framework.response import Response
@@ -37,30 +38,40 @@ class FileBuscarAvanzadoAPIView(Authentication,viewsets.GenericViewSet):
 
     serializer_class = FileBuscarAvanzadoSerializer
     def get_queryset(self,data):
-        print(data['tipoDoc'])
+        
         if data['opcionFecha'] == None:
-
-            return self.get_serializer().Meta.model.objects.filter(Q(nombreDocumento__icontains = data['nombreDoc'])| 
-                                                                Q(contenidoOCR__icontains = data['numeroExpediente'])| 
-                                                                Q(contenidoOCR__icontains = data['numeroCompra'])| 
-                                                                Q(contenidoOCR__icontains = data['numeroServicio']),  
-                                                                Q(scope =True,unidadArea_id=self.userFull.unidadArea_id,eliminado = False)|
-                                                                Q(scope =False,user_id=self.userFull.id,eliminado = False),
-                                                                extension__icontains = data['tipoDoc'],
-                                                                fileinfolder__parent_folder__nombre__icontains = data['carpetaNombre']).distinct()
+            print("opcion fecha none")
+            print(data['tipoDoc'])
+            if data['tipoCaracteristicaId'] == None:
+                return self.get_serializer().Meta.model.objects.filter(Q(scope =True,unidadArea_id=self.userFull.unidadArea_id,eliminado = False)|
+                                                                    Q(scope =False,user_id=self.userFull.id,eliminado = False),
+                                                                    Q(contenidoOCR__icontains = data['numeroECS'])|Q(contenidoOCR__isnull = True),
+                                                                    #contenidoOCR__icontains = data['numeroECS'],
+                                                                    extension__icontains = data['tipoDoc'],
+                                                                    nombreDocumento__icontains = data['nombreDoc'],
+                                                                    fileinfolder__parent_folder__slug__icontains = data['carpetaSlug']).distinct()
+            print("opcion fecha none siguiente return")
+            return self.get_serializer().Meta.model.objects.filter(Q(scope =True,unidadArea_id=self.userFull.unidadArea_id,eliminado = False)|
+                                                                    Q(scope =False,user_id=self.userFull.id,eliminado = False),
+                                                                    Q(contenidoOCR__icontains = data['numeroECS'])|Q(contenidoOCR__isnull = True),
+                                                                    #contenidoOCR__icontains = data['numeroECS'],
+                                                                    extension__icontains = data['tipoDoc'],
+                                                                    nombreDocumento__icontains = data['nombreDoc'],
+                                                                    fileinfolder__parent_folder__slug__icontains = data['carpetaSlug'],
+                                                                    caracteristicafile__caracteristica__tipoCaracteristica__id = data['tipoCaracteristicaId'],
+                                                                    caracteristicafile__caracteristica__nombreCaracteristica__icontains = data['nombreCaracteristica']).distinct()
         else:
             if data['fechaInicio'] == None and data['fechaFin'] == None:
                 rango = generarRangoFecha(data['opcionFecha'])
             else:
                 rango = [data['fechaInicio'],data['fechaFin']]
-            return self.get_serializer().Meta.model.objects.filter(Q(nombreDocumento__icontains = data['nombreDoc'])| 
-                                                                Q(contenidoOCR__icontains = data['numeroExpediente'])| 
-                                                                Q(contenidoOCR__icontains = data['numeroCompra'])| 
-                                                                Q(contenidoOCR__icontains = data['numeroServicio']),
-                                                                Q(scope =True,unidadArea_id=self.userFull.unidadArea_id,eliminado = False)|
+            return self.get_serializer().Meta.model.objects.filter(Q(scope =True,unidadArea_id=self.userFull.unidadArea_id,eliminado = False)|
                                                                 Q(scope =False,user_id=self.userFull.id,eliminado = False),
+                                                                Q(contenidoOCR__icontains = data['numeroECS'])|Q(contenidoOCR__isnull = True),
+                                                                #contenidoOCR__icontains = data['numeroECS'],
                                                                 extension__icontains = data['tipoDoc'],
-                                                                fileinfolder__parent_folder__nombre__icontains = data['carpetaNombre'],
+                                                                nombreDocumento__icontains = data['nombreDoc'],
+                                                                fileinfolder__parent_folder__slug__icontains = data['carpetaSlug'],
                                                                 fileinfolder__fechaCreacion__date__range = [rango[0],rango[1]]).order_by('fileinfolder__fechaCreacion').distinct()
         '''else:
             return self.get_serializer().Meta.model.objects.filter(Q(nombreDocumento__icontains = data['nombreDoc'])| 

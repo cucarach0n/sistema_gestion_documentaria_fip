@@ -154,13 +154,15 @@ class FileBuscarSerializer(serializers.Serializer):
 class FileBuscarAvanzadoSerializer(serializers.Serializer):
     tipoDoc = serializers.CharField(allow_blank=True)
     nombreDoc = serializers.CharField(allow_blank=True)
-    numeroExpediente=serializers.CharField(allow_blank=True)
-    numeroCompra=serializers.CharField(allow_blank=True)
-    numeroServicio = serializers.CharField(allow_blank=True)
-    carpetaNombre = serializers.CharField(allow_blank=True)
+    numeroECS=serializers.CharField(allow_blank=True)
+    '''numeroCompra=serializers.CharField(allow_blank=True)
+    numeroServicio = serializers.CharField(allow_blank=True)'''
+    carpetaSlug = serializers.CharField(allow_blank=True)
     fechaInicio = serializers.DateField(allow_null = True)
     fechaFin = serializers.DateField(allow_null = True)
     opcionFecha = serializers.IntegerField(allow_null = True)
+    tipoCaracteristicaId = serializers.IntegerField(allow_null = True)
+    nombreCaracteristica = serializers.CharField(allow_null = True)
     class Meta:
         model = File
 
