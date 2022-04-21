@@ -6,7 +6,7 @@ from apps.users.models import User
 class UserTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['correo','name','last_name','avatar','is_staff','is_superuser']
+        fields = ['correo','name','last_name','avatar','is_staff','is_superuser','is_active']
     def validate_avatar(self,value):
         return value
     def validate(self,data):
@@ -77,6 +77,15 @@ class UserDeleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id']
+    def validate(self,data):
+        return data
+class UserDisabledSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['id','is_active']
+    def validate(self,data):
+        return data
 class UserShareSerializer(serializers.ModelSerializer):
     ''''userFrom':{
                 'correo':usuarioFrom.userFrom.correo,

@@ -63,6 +63,7 @@ LOCAL_APPS =[
     'apps.caracteristica',
     'apps.users',
     'apps.share',
+    'apps.adminutils',
 ]
 
 THIRD_APPS = [
@@ -144,10 +145,10 @@ USE_TZ = False
 AUTH_USER_MODEL = 'users.User'
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000","https://fipuni.portalmybot.com","http://soporgram.sytes.net","http://fipdigital.info","https://fipdigital.info","https://www.fipdigital.info"
+    "http://localhost:3000","https://fipuni.portalmybot.com","http://soporgram.sytes.net","http://fipdigital.info","https://fipdigital.info","https://www.fipdigital.info","https://dev.fipdigital.info"
 ]
 CORS_ORIGIN_WHITELIST = [
-    "http://localhost:3000","https://fipuni.portalmybot.com","http://soporgram.sytes.net","http://fipdigital.info","https://fipdigital.info","https://www.fipdigital.info"
+    "http://localhost:3000","https://fipuni.portalmybot.com","http://soporgram.sytes.net","http://fipdigital.info","https://fipdigital.info","https://www.fipdigital.info","https://dev.fipdigital.info"
 ]
 
 

@@ -3,7 +3,7 @@ from apps.users.models import Contrasena_reinicio
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from apps.users.models import User
-from apps.users.api.serializers.user_serializers import UserSerializer,UserCreateSerializer,UserDeleteSerializer, UserUpdateSerializer
+from apps.users.api.serializers.user_serializers import UserDisabledSerializer, UserSerializer,UserCreateSerializer,UserDeleteSerializer, UserUpdateSerializer
 from apps.users.api.serializers.general_serializers import Contrasena_reinicioSerializer
 from apps.users.api.serializers.contrasenaReinicio_serializer import ContrasenaReinicioActivateSerializer
 from rest_framework import status
@@ -87,7 +87,8 @@ class UserCreateAPIView(generics.CreateAPIView):
                     'usuario':user.id
                     }
             contrasena_reinicioO = Contrasena_reinicioSerializer(data = datos)
-            
+            if user.is_staff < 3:
+                createCarpetaPrivadaUser(user.unidadArea_id,user)
             if contrasena_reinicioO.is_valid():
                 userSendEmail = contrasena_reinicioO.save()
                 
@@ -95,8 +96,7 @@ class UserCreateAPIView(generics.CreateAPIView):
                 #enviar email
                 send_email({'email':'devalo19@gmail.com','domain': str(absurl),'usuario':user,'password':serializer.validated_data['password']})
             userCreadoSerializer = UserSerializer(user)
-            if user.is_staff < 3:
-                createCarpetaPrivadaUser(user.unidadArea_id,user)
+            
             return Response(userCreadoSerializer.data,status = status.HTTP_200_OK)
         return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
 
@@ -141,7 +141,7 @@ class userDeleteAPIView(Authentication,generics.DestroyAPIView):
             return Response(userSerializer.errors,status = status.HTTP_400_BAD_REQUEST) 
 
 
-    def update(self,request,pk = None):
+    '''def update(self,request,pk = None):
         userSerializer = self.get_serializer(data = request.data)
         if userSerializer.is_valid():
             if self.userFull.is_superuser:
@@ -152,8 +152,30 @@ class userDeleteAPIView(Authentication,generics.DestroyAPIView):
             else:
                 return Response({'Error':'No tiene permitido realizar esta accion'},status = status.HTTP_400_BAD_REQUEST)  
         else:
-            return Response(userSerializer.errors,status = status.HTTP_400_BAD_REQUEST) 
+            return Response(userSerializer.errors,status = status.HTTP_400_BAD_REQUEST) '''
+class userDisabledAPIView(Authentication,generics.UpdateAPIView):
+    serializer_class = UserDisabledSerializer
+    def get_queryset(self,pk = None):
+        return self.get_serializer().Meta.model.objects.filter(id = pk).first()
 
+    def put(self,request,pk = None):
+        print(request.data)
+        userSerializer = self.get_serializer(data = request.data)
+        #userResult = self.get_queryset(pk)
+        if userSerializer.is_valid():
+            if self.userFull.is_superuser:
+                mensaje = "inhabilitado"
+                print(userSerializer.validated_data)
+                userResult = self.get_queryset(request.data['id'])
+                userResult.is_active = userSerializer.validated_data['is_active']
+                userResult.save()
+                if(userResult.is_active):
+                    mensaje = "habilitado"
+                return Response({'Mensaje':'Usuario {0} correctamente'.format(mensaje)},status = status.HTTP_200_OK)
+            else:
+                return Response({'Error':'No tiene permitido realizar esta accion'},status = status.HTTP_400_BAD_REQUEST)  
+        else:
+            return Response(userSerializer.errors,status = status.HTTP_400_BAD_REQUEST) 
 
 class userUpdateAPIView(Authentication,generics.UpdateAPIView):
     serializer_class = UserUpdateSerializer

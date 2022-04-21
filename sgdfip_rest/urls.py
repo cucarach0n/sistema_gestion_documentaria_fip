@@ -52,6 +52,7 @@ urlpatterns = [
     path('etiqueta/', include('apps.etiqueta.api.routers')),
     path('share/', include('apps.share.api.routers')),
     path('caracteristica/', include('apps.caracteristica.api.routers')),
+    path('utils/', include('apps.adminutils.api.routers')),
 ] #+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
