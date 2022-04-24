@@ -70,6 +70,9 @@ class FileDetalleSerializer(serializers.ModelSerializer):
         fileinfolder = FileInFolder.objects.filter(file = instance).first()
         tag_serializer = TagListSerializer(Tag.objects.filter(filetag__file = instance),many =True)
         etiqueta_serializer = EtiquetaListSerializer(Etiqueta.objects.filter(file = instance),many =True)
+
+        
+
         if folder:
             '''rutaLogica = "/"+obtenerRuta(folder.id,[folder.nombre],True)+"/"+instance.documento_file.name
             ruta = "/"+obtenerRuta(folder.id,[folder.slug],False)+"/"+instance.slug'''
@@ -78,11 +81,14 @@ class FileDetalleSerializer(serializers.ModelSerializer):
         else:
             rutaLogica = "?"
             ruta = "?"
-        
+        owner = False
+        if instance.user_id == self.context['userId']:
+            owner = True
         #print(folder)
         return{
             'nombre':instance.nombreDocumento,
             'nombreArchivo':instance.documento_file.name,
+            'owner':owner,
             'slug':instance.slug,
             'size':str(size(fileSize, system=si)),
             'extension':instance.extension,

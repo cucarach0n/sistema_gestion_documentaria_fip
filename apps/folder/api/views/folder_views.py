@@ -273,7 +273,7 @@ class FolderTrashAPIView(Authentication,viewsets.GenericViewSet):
             fileSerializer = FileDetalleSerializer(File.objects.filter(fileinfolder__parent_folder_id = folderMasterPrivate.id,
                                                             eliminado = True,
                                                             user_id = self.userFull.id,
-                                                            unidadArea_id = self.userFull.unidadArea_id),many = True)
+                                                            unidadArea_id = self.userFull.unidadArea_id),many = True,context = {'userId':self.userFull.id})
             arbol = TreeFolderSerializer(self.get_queryset(),many = True)
             #return Response(folders.data,status = status.HTTP_200_OK)
             return Response({'nombre':'Papelera de '+ self.userFull.name,

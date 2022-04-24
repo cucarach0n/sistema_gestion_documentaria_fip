@@ -49,7 +49,7 @@ def saveSubFolder(self,folderInFolder_serializer,folderPadre):
                 Response({'error':"Hubo un error al crear el Subdirectorio"},status = status.HTTP_400_BAD_REQUEST)    
             '''          
             folderInFolder_Serializer.save()
-        folderDetailSerializer = FolderDetailSerializer(fHijo)
+        folderDetailSerializer = FolderDetailSerializer(fHijo,context = {'userId':self.userFull.id})
         #set history subfolder
         setHistory(fHijo,'registro nuevo subfolder',self.userFull.id)
         #add history folderPadre

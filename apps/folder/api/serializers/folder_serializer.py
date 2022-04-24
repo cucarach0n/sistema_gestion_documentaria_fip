@@ -25,6 +25,9 @@ class FolderDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def to_representation(self,instance):
+        owner = False
+        if instance.user_id == self.context['userId']:
+            owner = True
         ruta = obtenerRuta(instance.id,[instance.slug],False)
         rutaLogica = obtenerRuta(instance.id,[instance.nombre],True)
         return {
@@ -35,6 +38,7 @@ class FolderDetailSerializer(serializers.ModelSerializer):
             'rutaSlug':"/"+ruta,
             'fechaCreacion':instance.fechaCreacion,
             'fechaUpdate':instance.fechaUpdate,
+            'owner':owner,
             'publico':instance.scope
         }
 
@@ -131,7 +135,7 @@ class FolderListaEnlasada():
 
 
 class FolderDirecotorioListSerializer(serializers.ModelSerializer):
-
+    #userId
     class Meta:
         model = Folder
         fields = "__all__"
@@ -172,10 +176,13 @@ class FolderDirecotorioListSerializer(serializers.ModelSerializer):
             
             folderQuery = Folder.objects.filter(scope = False,carpeta_hija__parent_folder_id = instance.id,user_id = self.context['userId'])
             fileQuery = File.objects.filter(scope = False,fileinfolder__parent_folder__id =instance.id,user_id = self.context['userId'])'''
+        owner = False
+        if instance.user_id == self.context['userId']:
+            owner = True
 
-        folder = FolderDetailSerializer(folderQuery,many = True)
+        folder = FolderDetailSerializer(folderQuery,many = True,context = {'userId':self.context['userId']})
         #files = FileDetalleSerializer(File.objects.filter(fileinfolder__parent_folder__id =instance.id),many = True,context = {'padre':instance.id})
-        files = FileDetalleSerializer(fileQuery,many = True,context = {'padre':instance.id})
+        files = FileDetalleSerializer(fileQuery,many = True,context = {'padre':instance.id,'userId':self.context['userId']})
         ruta = obtenerRuta(instance.id,[instance.slug],False)
         rutaLogica = obtenerRuta(instance.id,[instance.nombre],True)
         #treeArbolSerializer = TreeFolderSerializer(Folder.objects.filter(carpeta_hija__parent_folder_id = instance.id),many = True)
@@ -188,6 +195,7 @@ class FolderDirecotorioListSerializer(serializers.ModelSerializer):
             'fechaCreacion':instance.fechaCreacion,
             'fechaUpdate':instance.fechaUpdate,
             'publico':instance.scope,
+            'owner':owner,
             'subdirectorios': folder.data,
             'files':files.data,
             'treefolders':treeArbolSerializer.data
@@ -267,9 +275,13 @@ class FolderTrashPublicListSerializer(serializers.ModelSerializer):
         rutaLogica = obtenerRuta(instance.id,[instance.nombre],True)
         newRuta,newrutaLogica = crearRutaCompartida(ruta,rutaLogica,'Papelera Publica') 
         treeArbolSerializer = TreeFolderSerializer(folderQuery,many = True)
+        owner = False
+        if instance.user_id == self.context['userId']:
+            owner = True
         return {
             'slug':instance.slug,
             'nombre':instance.nombre,
+            'owner':owner,
             'rutaLogica': newrutaLogica.replace('  '," "),
             'rutaSlug': newRuta.replace('  '," "),
             'fechaCreacion':instance.fechaCreacion,

@@ -143,7 +143,7 @@ def saveFile(self,request,documento_serializer,scope):
         for paragraph in doc.paragraphs:
             print(paragraph.text)'''
     #print(documento)
-    fileDetalleSerializer = FileDetalleSerializer(documento)
+    fileDetalleSerializer = FileDetalleSerializer(documento,context = {'userId':self.userFull.id})
     #print(fileDetalleSerializer)
     #set history file
     #setHistory(documento,'agrego datos del file',self.userFull.id)
@@ -209,7 +209,7 @@ class FileObtenerViewSet(Authentication,viewsets.GenericViewSet):
                 response = FileResponse(file_data, content_type=app)
             
                 #response['Content-Length'] = file_data.size
-                response['Content-Disposition'] = 'attachment; filename="'+str(documento.documento_file)+'"'#56 en linux/ 34 windows
+                response['Content-Disposition'] = 'attachment; filename="'+str(documento.nombreDocumento)+'"'#56 en linux/ 34 windows
                 #create history
                 createHistory(File,documento.id,"Documento " + documento.documento_file.name + " visto","v",self.userFull.id)
             except:
@@ -231,12 +231,12 @@ class FileListViewSet(Authentication,viewsets.GenericViewSet):
             return FileDetalleSerializer.Meta.model.objects.filter(slug=pk,unidadArea_id = self.userFull.unidadArea_id,eliminado = False).first()
         return FileDetalleSerializer.Meta.model.objects.filter(slug=pk,eliminado = False).first()
     def list(self,request):
-        documento_serializer = FileDetalleSerializer(self.get_queryset(),many = True)
+        documento_serializer = FileDetalleSerializer(self.get_queryset(),many = True,context = {'userId':self.userFull.id})
         return Response(documento_serializer.data,status = status.HTTP_200_OK)
     def retrieve(self,request,pk=None):
         documentoResult = self.get_queryset(pk)
         if documentoResult:
-            documentoSerializer = FileDetalleSerializer(self.get_queryset(pk))
+            documentoSerializer = FileDetalleSerializer(self.get_queryset(pk),context = {'userId':self.userFull.id})
             docResult = self.get_queryset(pk)
             #if not docResult.scope:
             #    return Response({'error':'Este file no es publico'},status = status.HTTP_401_UNAUTHORIZED)
@@ -500,7 +500,7 @@ class FileBuscarAPIView(Authentication,viewsets.GenericViewSet):
     def create(self,request):
             file_serializer = self.get_serializer(data = request.data)
             if file_serializer.is_valid():
-                fileBusqueda_serializer = FileDetalleSerializer(self.get_queryset(file_serializer.data),many = True)
+                fileBusqueda_serializer = FileDetalleSerializer(self.get_queryset(file_serializer.data),many = True,context = {'userId':self.userFull.id})
                 return Response(fileBusqueda_serializer.data,status = status.HTTP_200_OK)
             else:
                 return Response(file_serializer.errors,status = status.HTTP_400_BAD_REQUEST)

@@ -67,7 +67,7 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
             return FileCreateSerializer().Meta.model.objects.all()
         return FileCreateSerializer().Meta.model.objects.filter(slug=pk).first()
     def list(self,request):
-        documento_serializer = FileDetalleSerializer(self.get_queryset(),many = True)
+        documento_serializer = FileDetalleSerializer(self.get_queryset(),many = True,context = {'userId':self.userFull.id})
         return Response(documento_serializer.data,status = status.HTTP_200_OK)
 
     
@@ -107,7 +107,7 @@ class FileViewSet(Authentication,viewsets.GenericViewSet):
             return Response({'Error':'no se pudo cargar el documento'},status = status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self,request,pk=None):
-        documento = FileDetalleSerializer(self.get_queryset(pk))
+        documento = FileDetalleSerializer(self.get_queryset(pk),context = {'userId':self.userFull.id})
         if documento:
             return Response(documento.data,status=status.HTTP_200_OK)
         return Response({'error':'No existe el documento solicitado'})

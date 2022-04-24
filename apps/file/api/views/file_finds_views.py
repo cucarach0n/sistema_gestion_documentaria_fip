@@ -129,7 +129,7 @@ class FileBuscarAvanzadoAPIView(Authentication,viewsets.GenericViewSet):
         file_serializer = self.get_serializer(data = request.data)
         if file_serializer.is_valid():
             result = self.get_queryset(file_serializer.validated_data)
-            fileBusqueda_serializer = FileDetalleSerializer(result,many = True)
+            fileBusqueda_serializer = FileDetalleSerializer(result,many = True,context = {'userId':self.userFull.id})
             return Response(fileBusqueda_serializer.data,status = status.HTTP_200_OK)
         else:
             return Response(file_serializer.errors,status = status.HTTP_400_BAD_REQUEST)

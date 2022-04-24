@@ -68,7 +68,7 @@ class FolderInFolderUploadViewSet(Authentication,viewsets.GenericViewSet):
                 else:
                     respuesta = status.HTTP_200_OK
 
-                folderSerializer = FolderDetailSerializer(padreNew)
+                folderSerializer = FolderDetailSerializer(padreNew,context = {'userId':self.userFull.id})
                 return Response({'pathCreate':folderInFolder_serializer.validated_data['pathFolder'],
                                 'folderCreate':folderSerializer.data},status = respuesta)
             else:
