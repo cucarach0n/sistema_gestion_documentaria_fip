@@ -25,6 +25,7 @@ packaging==21.3
 pdf2image==1.16.0
 pdfminer.six==20211012
 pdfplumber==0.6.0
+pdfrw==0.4
 Pillow==9.0.0
 psutil==5.9.0
 pycparser==2.21

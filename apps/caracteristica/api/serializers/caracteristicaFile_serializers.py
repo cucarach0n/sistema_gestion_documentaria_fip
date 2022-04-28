@@ -15,3 +15,14 @@ class CaracteristicaFileCreateSerializer(serializers.Serializer):
         caracteristicaFile = self.Meta.model(file_id = validated_data['slugFile'],caracteristica_id = validated_data['idCategoria'])#,unidadArea_id=validated_data['unidadareaid'])
         caracteristicaFile.save()
         return caracteristicaFile
+
+
+class CaracteristicaFileDeleteSerializer(serializers.Serializer):
+    slugFile = serializers.CharField(allow_blank=True)
+    idCategoria = serializers.IntegerField(allow_null = True)
+    class Meta:
+        model = CaracteristicaFile
+    def delete(self):
+        caracteristicaFile = self.Meta.model.objects.get(file = File.objects.get(slug = self.context['slugFile']),caracteristica_id = self.context['idCategoria'])#,unidadArea_id=validated_data['unidadareaid'])
+        caracteristicaFileDelete = caracteristicaFile.delete()
+        return caracteristicaFileDelete

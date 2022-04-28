@@ -13,6 +13,8 @@ from apps.tag.api.serializers.tag_serializer import TagListSerializer
 from apps.tag.models import Tag
 from decouple import config
 from django.utils.crypto import get_random_string
+
+
 def crearRutaCompartida(ruta,rutaLogica):
     newRuta = 'Carpeta compartida'
     newrutaLogica = 'Carpeta compartida'
@@ -35,8 +37,26 @@ class FileFolderCreateSerializer(serializers.Serializer):
     def validate_nombreDocumento(self,value):
         '''if File.objects.filter(nombreDocumento = value,fileinfolder__parent_folder__slug = self.context['folderSlug']):
             raise serializers.ValidationError("Ya existe un file con este nombre")'''
-        if File.objects.filter(nombreDocumento = value,fileinfolder__parent_folder__slug = self.context['folderSlug']):
-            return value + "_" + get_random_string(length=3)
+        
+        fileResult = File.objects.filter(nombreDocumento = value,fileinfolder__parent_folder__slug = self.context['folderSlug']).first()
+        if fileResult:
+            ext = fileResult.extension
+            indiceExt = value.rfind('.'+ext)
+            nameFile = value[0:indiceExt]
+            fileResultAll = File.objects.filter(nombreDocumento__startswith = nameFile,fileinfolder__parent_folder__slug = self.context['folderSlug'])
+            fileResultName = fileResultAll.last()
+            
+            nombreFile = fileResultName.nombreDocumento
+            if(nombreFile.find("- copia") == -1):
+                value = nameFile + ' - copia.' + ext
+            elif(nombreFile.find("- copia") != -1):
+                if(nombreFile.find("- copia(") == -1):
+                    value = nameFile + ' - copia(1).' + ext
+                else:
+                    indice = nombreFile.find("- copia(")
+                    cuenta = int(nombreFile[indice+8:indice+9]) + 1
+                    value = nameFile + ' - copia(' + str(cuenta) + ').' + ext
+            return value
         return value
 
     def create(self,validated_data):

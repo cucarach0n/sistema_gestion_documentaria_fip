@@ -1,4 +1,4 @@
-from apps.caracteristica.api.serializers.caracteristicaFile_serializers import CaracteristicaFileCreateSerializer
+from apps.caracteristica.api.serializers.caracteristicaFile_serializers import CaracteristicaFileCreateSerializer,CaracteristicaFileDeleteSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from apps.users.authenticacion_mixings import Authentication
@@ -13,3 +13,9 @@ class CaracteristicaFileViewSet(Authentication,viewsets.GenericViewSet):
             return Response({'mensaje':'creado satisfactoriamente'},status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
+    def delete(self,request,pk=None):
+        serializer = CaracteristicaFileDeleteSerializer(data=request.data,context = request.data)
+        if(serializer.is_valid()):
+            serializer.delete()
+            return Response({'mensaje':'eliminado satisfactoriamente'},status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)

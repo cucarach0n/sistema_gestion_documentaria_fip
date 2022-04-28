@@ -17,6 +17,7 @@ from django.http import FileResponse
 from apps.base.util import DocumentoOCR, createHistory, setHistory, validarPrivado
 import threading
 import PyPDF2
+from PyPDF2 import PdfFileReader, PdfFileMerger,PdfFileWriter
 import pathlib
 from docx import Document
 #import pdfplumber
@@ -105,7 +106,32 @@ def saveFile(self,request,documento_serializer,scope):
     
     #nameFile = request.FILES['documento_file'].name.replace(" ","_")
     nameFile = normalisarNameDocument(request.FILES['documento_file'].name)
-    file = fs.save(nameFile,request.FILES['documento_file'])
+    
+    file_in = request.FILES['documento_file']
+
+    pdf_merger = PdfFileMerger()
+    pdfreadRewrite = PdfFileReader(file_in,  strict = False)
+    pdfwrite = PdfFileWriter()
+    for page_count in range(pdfreadRewrite.numPages):
+        pages = pdfreadRewrite.getPage(page_count)
+        pdfwrite.addPage(pages)
+
+    fileobjfix = open(settings.MEDIA_ROOT+'test/'+'fixedPDF.pdf', 'w+b')
+    pdfwrite.write(fileobjfix)
+    #fileobjfix.close()
+
+    pdf_merger.append(fileobjfix)
+    pdf_merger.addMetadata({
+        '/Title': str(documento_serializer.validated_data['nombreDocumento'])
+    })
+    file_out = open(settings.MEDIA_ROOT+'test/'+'new.pdf', 'w+b')
+    pdf_merger.write(file_out)
+
+    '''file_in.close()
+    file_out.close()'''
+    
+    #file = fs.save(nameFile,request.FILES['documento_file'])
+    file = fs.save(nameFile,file_out)
     fileurl = fs.get_valid_name(file)
     #documento_serializer.validated_data['documento_file'] = doc
     #documento_serializer.validated_data['contenidoOCR'] = "test"
