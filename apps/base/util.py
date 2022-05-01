@@ -18,7 +18,7 @@ from django.db.models import Q
 import unicodedata
 from django.core.files.storage import FileSystemStorage
 from django.db import transaction
-
+os.environ['OMP_THREAD_LIMIT'] = '1'
 sistema = platform.system()
 if(sistema == "Windows"):
     pytesseract.pytesseract.tesseract_cmd = config('TESSERACT_CMD_PATH')#r'C:\Program Files\Tesseract-OCR\tesseract'

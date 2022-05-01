@@ -139,7 +139,7 @@ class FolderViewSet(Authentication,viewsets.GenericViewSet):
             
             #print(folder.id)
             #create history
-            createHistory(Folder,folder.first().id,"Obteniendo carpeta "+ folder.first().nombre,"o",self.userFull.id)
+            createHistory(Folder,folder.first().id,"Obteniendo carpeta "+ folder.first().slug,"o",self.userFull.id)
             folders = FolderDirecotorioListSerializer(folder,many = True,context = {'userId':self.userFull.id,'userStaff': self.userFull.is_staff})
             '''padrePrivate = obtenerRuta(folder.first().id,[folder.first().nombre],True,False,True,self.userFull.id)
             if not padrePrivate:
@@ -346,7 +346,7 @@ class FolderUpdatePrivateAPIView(Authentication,viewsets.GenericViewSet):
                     FolderInFolder.objects.filter(child_folder__slug = pk).update(parent_folder_id = folderGestion.id)
                     File.objects.filter(fileinfolder__parent_folder__slug = pk).update(scope = True)
                     setPublicHijos(folderResult.slug)
-                    createHistory(Folder,folderResult.id,"Cambiando a publico "+ folderResult.nombre,"P",self.userFull.id)
+                    createHistory(Folder,folderResult.id,"Cambiando a publico "+ folderResult.slug,"P",self.userFull.id)
                 folder = folderUpdateSerializer.save()
                 #set history subfolder
                 setHistory(folder,'datos del folder actualizado',self.userFull.id)

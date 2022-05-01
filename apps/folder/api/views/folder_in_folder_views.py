@@ -54,7 +54,7 @@ def saveSubFolder(self,folderInFolder_serializer,folderPadre):
         setHistory(fHijo,'registro nuevo subfolder',self.userFull.id)
         #add history folderPadre
         history = fHijo.historical.create(id=folderPadre.id,history_date = datetime.today()
-                                        ,history_change_reason = "Se agrego la carpeta " + fHijo.nombre.replace(" ","_") 
+                                        ,history_change_reason = "Se agrego la carpeta " + fHijo.slug 
                                         ,history_type = "+", history_user_id = self.userFull.id )
         history.save()
         

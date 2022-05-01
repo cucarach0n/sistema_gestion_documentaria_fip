@@ -20,6 +20,7 @@ import PyPDF2
 from PyPDF2 import PdfFileReader, PdfFileMerger,PdfFileWriter
 import pathlib
 from docx import Document
+from os import remove
 #import pdfplumber
 #from apps.base.pdfConvertPdfMiner import extrarText
 from django.utils.crypto import get_random_string
@@ -43,6 +44,8 @@ def guardarOcr(file,id,idUser,textoExtraido):
         fileSave = file.save()
         #set history file
         setHistory(fileSave,'contenido OCR registrado',idUser)
+    del(documentoRenderisado)
+    del(text)
 def extraerTextDocx(pathFile,idFile):
     doc = Document(pathFile)
     text =""
@@ -100,39 +103,48 @@ def normalisarNameDocument(nameFile):
     return nameFile
         
 def saveFile(self,request,documento_serializer,scope):
+    nameFile = normalisarNameDocument(request.FILES['documento_file'].name)
     #current_site = get_current_site(request).domain
     ruta = settings.MEDIA_ROOT+'files/'
     fs = FileSystemStorage(location=ruta)
-    
-    #nameFile = request.FILES['documento_file'].name.replace(" ","_")
-    nameFile = normalisarNameDocument(request.FILES['documento_file'].name)
-    
-    file_in = request.FILES['documento_file']
+    if(".pdf" in nameFile):
+        
+        
+        
+        #nameFile = request.FILES['documento_file'].name.replace(" ","_")
+        
+        slugTemp = get_random_string(length=10)
+        file_in = request.FILES['documento_file']
 
-    pdf_merger = PdfFileMerger()
-    pdfreadRewrite = PdfFileReader(file_in,  strict = False)
-    pdfwrite = PdfFileWriter()
-    for page_count in range(pdfreadRewrite.numPages):
-        pages = pdfreadRewrite.getPage(page_count)
-        pdfwrite.addPage(pages)
+        pdf_merger = PdfFileMerger()
+        pdfreadRewrite = PdfFileReader(file_in,  strict = False)
+        pdfwrite = PdfFileWriter()
+        for page_count in range(pdfreadRewrite.numPages):
+            pages = pdfreadRewrite.getPage(page_count)
+            pdfwrite.addPage(pages)
 
-    fileobjfix = open(settings.MEDIA_ROOT+'test/'+'fixedPDF.pdf', 'w+b')
-    pdfwrite.write(fileobjfix)
-    #fileobjfix.close()
+        fileobjfix = open(settings.MEDIA_ROOT+'test/'+slugTemp+'-fixedPDF.pdf', 'w+b')
+        pdfwrite.write(fileobjfix)
+        #fileobjfix.close()
 
-    pdf_merger.append(fileobjfix)
-    pdf_merger.addMetadata({
-        '/Title': str(documento_serializer.validated_data['nombreDocumento'])
-    })
-    file_out = open(settings.MEDIA_ROOT+'test/'+'new.pdf', 'w+b')
-    pdf_merger.write(file_out)
-
-    '''file_in.close()
-    file_out.close()'''
+        pdf_merger.append(fileobjfix)
+        pdf_merger.addMetadata({
+            '/Title': str(documento_serializer.validated_data['nombreDocumento'])
+        })
+        file_out = open(settings.MEDIA_ROOT+'test/'+slugTemp+'-new.pdf', 'w+b')
+        pdf_merger.write(file_out)
+    else:
+        file_in = request.FILES['documento_file']
+        file_out = request.FILES['documento_file']
+        '''file_in.close()
+        file_out.close()'''
     
     #file = fs.save(nameFile,request.FILES['documento_file'])
     file = fs.save(nameFile,file_out)
     fileurl = fs.get_valid_name(file)
+    file_in.close()
+    file_out.close()
+    
     #documento_serializer.validated_data['documento_file'] = doc
     #documento_serializer.validated_data['contenidoOCR'] = "test"
     #documento = documento_serializer.save()
@@ -174,6 +186,7 @@ def saveFile(self,request,documento_serializer,scope):
     #set history file
     #setHistory(documento,'agrego datos del file',self.userFull.id)
     parentID = Folder.objects.filter(slug = request.data['directorioslug']).first()
+    
     if parentID:
         fileinfoler_serializer = FileInFolder_Serializer(data = {
             'file': documento.id,
@@ -184,7 +197,7 @@ def saveFile(self,request,documento_serializer,scope):
             #set history fileinfolder
             setHistory(fileInFolderSave,'registro en el folder',self.userFull.id)
             #add history folder
-            createHistory(Folder,parentID.id,"Se agrego el file " + documento.documento_file.name,"+",self.userFull.id)
+            createHistory(Folder,parentID.id,"Se agrego el file ","+",self.userFull.id)
             '''history = Folder.historical.create(id=parentID.id,history_date = datetime.today()
                                         ,history_change_reason = "Se agrego el file " + documento.documento_file.name
                                         ,history_type = "+", history_user_id = self.userFull.id )
@@ -192,6 +205,7 @@ def saveFile(self,request,documento_serializer,scope):
         '''threading_text = threading.Thread(target=guardarOcr,args=(fileurl,documento.id,))
         threading_text.start()
         print('Cantidad de threading : ',threading.active_count())'''
+
         return Response(fileDetalleSerializer.data,status = status.HTTP_200_OK)
     #File.objects.filter(id = documento.id).delete()
     return Response({'error':'La carpeta contenedora no existe'},status = status.HTTP_404_NOT_FOUND)   
@@ -223,24 +237,24 @@ class FileObtenerViewSet(Authentication,viewsets.GenericViewSet):
             print(nameNewFile)'''
             ###################
             print('Sirviendo file {0} al usuario {1}'.format(documento.documento_file.name,self.userFull.correo))
-            doc = str(documento.documento_file)#56 en linux / 34 windows
+            doc = str(documento.documento_file.name)#56 en linux / 34 windows
             file_location =  settings.MEDIA_ROOT + 'files/' + doc 
-            try:    
-                #with open(file_location, 'r') as f:
-                #    file_data = f.read()
-                file_data = open(file_location, 'rb')
-                # sending response 
-                ext,app = extraerExtencion(str(documento.documento_file))#56 en linux/ 34 windows
-                
-                response = FileResponse(file_data, content_type=app)
+            '''try:'''    
+            #with open(file_location, 'r') as f:
+            #    file_data = f.read()
+            file_data = open(file_location, 'rb')
+            # sending response 
+            ext,app = extraerExtencion(str(documento.documento_file))#56 en linux/ 34 windows
             
-                #response['Content-Length'] = file_data.size
-                response['Content-Disposition'] = 'attachment; filename="'+str(documento.nombreDocumento)+'"'#56 en linux/ 34 windows
-                #create history
-                createHistory(File,documento.id,"Documento " + documento.documento_file.name + " visto","v",self.userFull.id)
-            except:
+            response = FileResponse(file_data, content_type=app)
+        
+            #response['Content-Length'] = file_data.size
+            response['Content-Disposition'] = 'attachment; filename="'+str(documento.nombreDocumento)+'"'#56 en linux/ 34 windows
+            #create history
+            createHistory(File,documento.id,"Documento visto","v",self.userFull.id)
+            '''except:
                 # handle file not exist case here
-                return Response({'error':'Hubo un error al obtener el archivo'},status = status.HTTP_400_BAD_REQUEST)
+                return Response({'error':'Hubo un error al obtener el archivo'},status = status.HTTP_400_BAD_REQUEST)'''
             return response
         return Response({'error':'No existe el documento o archivo solicitado'},status = status.HTTP_404_NOT_FOUND)
         
@@ -272,7 +286,7 @@ class FileListViewSet(Authentication,viewsets.GenericViewSet):
                 return Response(documento.data,status=status.HTTP_200_OK)
             return Response({'error':'El archivo solicitado es privado'},status = status.HTTP_401_UNAUTHORIZED)'''
             #create history
-            createHistory(File,docResult.id,"Obteniendo documento " + docResult.documento_file.name,"o",self.userFull.id)
+            createHistory(File,docResult.id,"Obteniendo documento ","o",self.userFull.id)
             return Response(documentoSerializer.data,status=status.HTTP_200_OK)
         return Response({'error':'No existe el documento solicitado'},status = status.HTTP_404_NOT_FOUND)
     def update(self,request,pk=None):

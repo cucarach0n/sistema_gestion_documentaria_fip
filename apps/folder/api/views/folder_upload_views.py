@@ -32,7 +32,7 @@ def saveSubFolderUpload(self,nombreFolder,folderPadre):
             folderInFolder_Serializer.save()
         setHistory(fHijo,'registro nuevo subfolder',self.userFull.id)
         history = fHijo.historical.create(id=folderPadre.id,history_date = datetime.today()
-                                        ,history_change_reason = "Se agrego la carpeta " + fHijo.nombre 
+                                        ,history_change_reason = "Se agrego la carpeta " + fHijo.slug 
                                         ,history_type = "+", history_user_id = self.userFull.id )
         history.save()
         return True,fHijo
