@@ -20,7 +20,7 @@ from apps.users.authenticacion_mixings import Authentication
 from rest_framework import viewsets
 from django.utils.crypto import get_random_string  
 from django.db.models import Q
-
+from django.core.paginator import Paginator
 #pendiente quitar
 class FolderPrivateViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = FolderSerializer
@@ -53,7 +53,7 @@ class FolderPrivateViewSet(Authentication,viewsets.GenericViewSet):
                 return Response({'error':'La carpeta solicitada no es accesible'},status = status.HTTP_401_UNAUTHORIZED)
             if validarPrivado(folder.first(),self.userFull.id):
                 return Response({'error':'La carpeta solicitada es privada'},status = status.HTTP_401_UNAUTHORIZED)
-            createHistory(Folder,folder.first().id,"Obteniendo carpeta "+ folder.first().nombre,"o",self.userFull.id)
+            createHistory(Folder,folder.first().id,"Obteniendo carpeta","o",self.userFull.id)
             folders = FolderDirecotorioListSerializer(folder,many = True,context = {'userId':self.userFull.id,'userStaff': 6})
             return Response(folders.data,status = status.HTTP_200_OK)
         return Response({'error':"El directorio no existe"},status = status.HTTP_400_BAD_REQUEST)   
@@ -139,7 +139,7 @@ class FolderViewSet(Authentication,viewsets.GenericViewSet):
             
             #print(folder.id)
             #create history
-            createHistory(Folder,folder.first().id,"Obteniendo carpeta "+ folder.first().slug,"o",self.userFull.id)
+            createHistory(Folder,folder.first().id,"Obteniendo carpeta","o",self.userFull.id)
             folders = FolderDirecotorioListSerializer(folder,many = True,context = {'userId':self.userFull.id,'userStaff': self.userFull.is_staff})
             '''padrePrivate = obtenerRuta(folder.first().id,[folder.first().nombre],True,False,True,self.userFull.id)
             if not padrePrivate:
@@ -346,7 +346,7 @@ class FolderUpdatePrivateAPIView(Authentication,viewsets.GenericViewSet):
                     FolderInFolder.objects.filter(child_folder__slug = pk).update(parent_folder_id = folderGestion.id)
                     File.objects.filter(fileinfolder__parent_folder__slug = pk).update(scope = True)
                     setPublicHijos(folderResult.slug)
-                    createHistory(Folder,folderResult.id,"Cambiando a publico "+ folderResult.slug,"P",self.userFull.id)
+                    createHistory(Folder,folderResult.id,"Cambiando a publico","P",self.userFull.id)
                 folder = folderUpdateSerializer.save()
                 #set history subfolder
                 setHistory(folder,'datos del folder actualizado',self.userFull.id)
@@ -364,6 +364,14 @@ class FolderHistoryAPIView(Authentication,viewsets.GenericViewSet):
         return Folder.historical.filter(history_user_id=self.userFull.id)
     def list(self,request):
         historyFolder = self.get_queryset()
+        paginator = Paginator(historyFolder,10)
+        try:
+            page = request.data['page']
+        except:
+            print("No se envio la pagina")
+            page = 1
+        historyFolder = paginator.get_page(page)
+        print(paginator.num_pages)
         folderHistorialSerializer = self.get_serializer(historyFolder,many = True)
         return Response(folderHistorialSerializer.data, status = status.HTTP_200_OK)
     def retrieve(self,request,pk = None):

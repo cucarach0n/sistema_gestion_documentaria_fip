@@ -14,7 +14,7 @@ from apps.folder.models import Folder, FolderInFolder
 from django.utils.crypto import get_random_string
 import platform
 from django.db.models import Q
-
+import requests
 import unicodedata
 from django.core.files.storage import FileSystemStorage
 from django.db import transaction
@@ -44,6 +44,21 @@ def send_email(data):
         'Bienvenido al Sistema de Gestion Documentaria FIP',
         'Credenciales de acceso para '+ data['usuario'].name +" " + data['usuario'].last_name,
         "Registro de cuenta FIP <"+settings.EMAIL_HOST_USER+">",
+        [data['email']]
+    )
+
+    email.attach_alternative(content,'text/html')
+    email.send()
+    return content
+def send_password(data):
+    context = {'email':data['email'],'domain':data['domain'],'usuario':data['usuario'],'password':data['password']}
+    #template = get_template(settings.TEMPLATE_DIRS[0].replace("\\","/")[:64] +'/templates/correo.html')#64 windows / 66 linux
+    template = get_template('correoNewPass.html')
+    content = template.render(context)
+    email = EmailMultiAlternatives(
+        'Recuperacion de contraseña SGDFIP',
+        'Credenciales de acceso para '+ data['usuario'].name +" " + data['usuario'].last_name,
+        "Recuperacion de cuenta FIP <"+settings.EMAIL_HOST_USER+">",
         [data['email']]
     )
 
@@ -263,3 +278,14 @@ class DocumentoOCR():
         print('contenido extraido por el OCR exitosamente!')
         return textGenerado
         #return 'test'
+
+def sendFileToProcess(slug,fileName):
+    rutaFile = settings.MEDIA_ROOT+'files/'+fileName
+    openFile = open(rutaFile, 'rb')
+    data = {
+        'slug': str(slug)
+    }
+    files = {'document': openFile}
+    print("enviando file a OcrSevice")
+    res = requests.post(config("URL_OCR")+'/servicioOcr/uploadOCR/', files=files,data=data)
+    print(res.text)

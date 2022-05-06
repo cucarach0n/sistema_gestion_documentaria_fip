@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from apps.caracteristica.api.serializers.caracteristica_serializers import CaracteristicaFileSerializer
+from apps.caracteristica.models import Caracteristica
 from apps.etiqueta.api.serializers.etiqueta_serializers import EtiquetaListSerializer
 from apps.etiqueta.models import Etiqueta
 from apps.share.models import FileShare, FolderShare
@@ -23,6 +25,12 @@ def crearRutaCompartida(ruta,rutaLogica):
     for i in range(1,len(rutaLogica.split('>'))):
         newrutaLogica += ' > ' + rutaLogica.split('>')[i]
     return newRuta,newrutaLogica
+
+class FileUpdateOcrServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = File
+        fields = ['contenidoOCR','slug']
+
 class FileCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
@@ -90,7 +98,8 @@ class FileDetalleSerializer(serializers.ModelSerializer):
         fileinfolder = FileInFolder.objects.filter(file = instance).first()
         tag_serializer = TagListSerializer(Tag.objects.filter(filetag__file = instance),many =True)
         etiqueta_serializer = EtiquetaListSerializer(Etiqueta.objects.filter(file = instance),many =True)
-
+        
+        caracteristica_serializer = CaracteristicaFileSerializer(Caracteristica.objects.filter(caracteristicafile__file = instance),many =True)
         
 
         if folder:
@@ -118,6 +127,7 @@ class FileDetalleSerializer(serializers.ModelSerializer):
             'publico':instance.scope,
             'tags':tag_serializer.data,
             'etiquetas':etiqueta_serializer.data,
+            'caracteristica':caracteristica_serializer.data,
             'fechaCreacion':fileinfolder.fechaCreacion,
             'fechaUpdate':fileinfolder.fechaUpdate
         }
@@ -131,6 +141,7 @@ class FileDetalleShareSerializer(serializers.ModelSerializer):
         fileinfolder = FileInFolder.objects.filter(file = instance).first()
         tag_serializer = TagListSerializer(Tag.objects.filter(filetag__file = instance),many =True)
         etiqueta_serializer = EtiquetaListSerializer(Etiqueta.objects.filter(file = instance),many =True)
+        caracteristica_serializer = CaracteristicaFileSerializer(Caracteristica.objects.filter(caracteristicafile__file = instance),many =True)
         if folder:
             '''rutaLogica = "/"+obtenerRuta(folder.id,[folder.nombre],True)+"/"+instance.documento_file.name
             ruta = "/"+obtenerRuta(folder.id,[folder.slug],False)+"/"+instance.slug'''
@@ -157,6 +168,7 @@ class FileDetalleShareSerializer(serializers.ModelSerializer):
             'url':"{0}/file/ver/{1}/".format(config("URL_SERVER"),instance.slug),
             'tags':tag_serializer.data,
             'etiquetas':etiqueta_serializer.data,
+            'caracteristica':caracteristica_serializer.data,
             'userFrom':userSerializer,
             'fechaCreacion':fileinfolder.fechaCreacion,
             'fechaUpdate':fileinfolder.fechaUpdate

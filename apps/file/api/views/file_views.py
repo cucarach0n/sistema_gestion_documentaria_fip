@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from apps.file.api.serializers.file_serializers import (
     FileCreateSerializer, FileHistorySerializer,FileObtenerSerializer,FileFolderCreateSerializer,
-    FileDetalleSerializer,FileUpdateOcrSerializer,FileBuscarSerializer, FileUpdatePrivateSerializer, FileUpdateSerializer
+    FileDetalleSerializer,FileUpdateOcrSerializer,FileBuscarSerializer, FileUpdatePrivateSerializer, FileUpdateSerializer,FileUpdateOcrServiceSerializer
     )
 from apps.file.api.serializers.general_serializers import File_Serializer,FileInFolder_Serializer
 from apps.users.authenticacion_mixings import Authentication
@@ -14,7 +14,7 @@ from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from rest_framework import viewsets
 from django.http import FileResponse
-from apps.base.util import DocumentoOCR, createHistory, setHistory, validarPrivado
+from apps.base.util import DocumentoOCR, createHistory, setHistory, validarPrivado,sendFileToProcess
 import threading
 import PyPDF2
 from PyPDF2 import PdfFileReader, PdfFileMerger,PdfFileWriter
@@ -36,7 +36,9 @@ def guardarOcr(file,id,idUser,textoExtraido):
               
     elif textoExtraido:
         text = textoExtraido'''
-    documentoRenderisado = DocumentoOCR(file)
+    fileSave = File.objects.filter(id = id).first()
+    sendFileToProcess(fileSave.slug,fileSave.documento_file.name)
+    '''documentoRenderisado = DocumentoOCR(file)
     text = str(documentoRenderisado.obtenerTexto())
     file = FileUpdateOcrSerializer(File.objects.filter(id = id).first(),data = {'contenidoOCR':text})
     
@@ -44,8 +46,9 @@ def guardarOcr(file,id,idUser,textoExtraido):
         fileSave = file.save()
         #set history file
         setHistory(fileSave,'contenido OCR registrado',idUser)
+        
     del(documentoRenderisado)
-    del(text)
+    del(text)'''
 def extraerTextDocx(pathFile,idFile):
     doc = Document(pathFile)
     text =""
@@ -164,6 +167,7 @@ def saveFile(self,request,documento_serializer,scope):
     textPDF = '' #obtenerTextoPDF("/"+fileurl)
     #documento.contenidoOCR = textPDF #documentoOcr.obtenerTexto()
     documento.save()
+    
     #set history unidadArea
     setHistory(documento,'se registro el file',self.userFull.id)
     if documento.extension == "pdf":
@@ -260,6 +264,22 @@ class FileObtenerViewSet(Authentication,viewsets.GenericViewSet):
         
         #return Response({'error':'Error al procesar la solicitud'},status = status.HTTP_400_BAD_REQUEST)
         #return Response({'error':'No existe el file'},status = status.HTTP_400_BAD_REQUEST)
+class FileUpdateOcreViewSet(viewsets.GenericViewSet):
+    serializer_class = FileUpdateOcrServiceSerializer
+    def get_queryset(self,pk=None):
+        return self.serializer_class().Meta.model.objects.filter(slug=pk).first()
+
+    def update(self,request,pk=None):
+        documentoSerializer = self.serializer_class(data = request.data)
+        if(documentoSerializer.is_valid()):
+            documento = self.get_queryset(documentoSerializer.validated_data['slug'])
+            documento.contenidoOCR = documentoSerializer.validated_data['contenidoOCR']
+            documento.save()
+            print(documento)
+            return Response({"mensaje":"Actualizado!"},status = status.HTTP_200_OK)
+        return Response(documentoSerializer.errors,status = status.HTTP_400_BAD_REQUEST)
+        
+
 class FileListViewSet(Authentication,viewsets.GenericViewSet):
     serializer_class = FileUpdateSerializer
 
@@ -327,7 +347,7 @@ class FileUpdatePrivateViewSet(Authentication,viewsets.GenericViewSet):
                     folderGestion = Folder.objects.filter(carpeta_hija__isnull =True,unidadArea_id = self.userFull.unidadArea_id).first()
                     FileInFolder.objects.filter(file_id = documento.id).update(parent_folder_id = folderGestion.id)
                     documento_serializer.validated_data['user_id'] = self.userFull.id
-                    createHistory(File,documento.id,"Cambiando a publico "+ documento.nombreDocumento,"P",self.userFull.id)
+                    createHistory(File,documento.id,"Cambiando a publico","P",self.userFull.id)
                 fileUpdate = documento_serializer.save()
                 #set history file
                 setHistory(fileUpdate,'actualizo file',self.userFull.id)

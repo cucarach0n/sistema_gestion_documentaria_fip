@@ -13,7 +13,7 @@ class Folder(models.Model):
     scope = models.BooleanField(default = True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False)
     eliminado = models.BooleanField(default = False)
-    historical = HistoricalRecords(excluded_fields=['slug','nombre','fechaCreacion','fechaUpdate','unidadArea','user','scope',])
+    historical = HistoricalRecords(excluded_fields=['slug','fechaCreacion','fechaUpdate','unidadArea','user','scope',])
 
     @property
     def _history_user(self):
@@ -25,7 +25,7 @@ class Folder(models.Model):
     class Meta():
         verbose_name = 'Folder'
         verbose_name_plural = 'Folders'
-    
+    2
     def __str__(self):
         return "{0},{1}".format(self.nombre,self.slug)
 

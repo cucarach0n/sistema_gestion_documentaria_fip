@@ -317,10 +317,13 @@ class FolderHistorySerializer(serializers.ModelSerializer):
         fields = ['id','history_date','history_change_reason','history_type','history_user']
     def to_representation(self,instance):
         folderResult = Folder.objects.filter(id = instance.id).first()
+        if(folderResult == None):
+            ruta ="Eliminado"
+        else:
+            ruta = obtenerRuta(folderResult.id,[folderResult.nombre],True)
         return {
-            'folderName':folderResult.nombre,
-            'folderSlug':folderResult.slug,
-            'rutaLogica': obtenerRuta(folderResult.id,[folderResult.nombre],True),
+            'folderName':instance.nombre,
+            'rutaLogica': ruta,
             'fechaCreacion' : instance.history_date,
             'accion':instance.history_change_reason,
             'tipo':instance.history_type,

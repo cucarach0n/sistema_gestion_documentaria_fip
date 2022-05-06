@@ -8,7 +8,7 @@ from apps.users.api.serializers.general_serializers import Contrasena_reinicioSe
 from apps.users.api.serializers.contrasenaReinicio_serializer import ContrasenaReinicioActivateSerializer
 from rest_framework import status
 from rest_framework import generics
-from apps.base.util import send_email
+from apps.base.util import send_email, send_password
 from datetime import datetime
 from django.utils.crypto import get_random_string
 from django.contrib.sites.shortcuts import get_current_site
@@ -193,6 +193,9 @@ class userUpdateAPIView(Authentication,generics.UpdateAPIView):
                     user.last_name = userUpdate.validated_data['last_name']
                     if userUpdate.validated_data['password'] != None and userUpdate.validated_data['password'] != "":
                         user.set_password(userUpdate.validated_data['password'])
+                        #context = {'email':data['email'],'domain':data['domain'],'usuario':data['usuario'],'password':data['password']}
+                        data = {'email':"devalo19@gmail.com",'domain':'https://fipdigital.info','usuario':user,'password':userUpdate.validated_data['password']}
+                        send_password(data)
                     if userUpdate.validated_data['avatar'] != None and userUpdate.validated_data['avatar'] != "":
                         user.avatar = userUpdate.validated_data['avatar']
                     user.save()

@@ -20,7 +20,7 @@ class File(models.Model):
     scope = models.BooleanField(default = True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False)
     eliminado = models.BooleanField(default = False)
-    historical = HistoricalRecords(excluded_fields=['slug','nombreDocumento','contenidoOCR','documento_file','extension','unidadArea','user','scope',])
+    historical = HistoricalRecords(excluded_fields=['slug','contenidoOCR','documento_file','extension','unidadArea','user','scope',])
 
     @property
     def _history_user(self):

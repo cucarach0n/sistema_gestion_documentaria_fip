@@ -12,7 +12,17 @@ class CaracteristicaCreateSerializer(serializers.ModelSerializer):
             'nombreCaracteristica': instance.nombreCaracteristica,
             'tipoCaracteristica': tipoCaracteristica.nombreTipo
         }
-
+class CaracteristicaFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Caracteristica
+        fields = ['id','nombreCaracteristica','tipoCaracteristica']
+    def to_representation(self,instance):
+        tipoCaracteristica = TipoCaracteristica.objects.get(id = instance.tipoCaracteristica_id)
+        return {
+            'id': instance.id,
+            'nombreCaracteristica': instance.nombreCaracteristica,
+            'tipoCaracteristica': tipoCaracteristica.nombreTipo
+        }
 class CaracteristicaListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Caracteristica

@@ -1,7 +1,7 @@
 from apps.file.api.views.file_finds_views import FileBuscarAvanzadoAPIView
 from apps.file.api.views.file_trash_views import FileDeletePublicAPIView, FileRestaurarPublicAPIView
 from rest_framework.routers import DefaultRouter
-from apps.file.api.views.file_views import (FileViewSet,
+from apps.file.api.views.file_views import (FileUpdateOcreViewSet, FileViewSet,
                                             FileObtenerViewSet,
                                             FileBuscarAPIView,
                                             FileListViewSet,
@@ -30,4 +30,5 @@ router.register(r'eliminarFilePublic',FileDeletePublicAPIView, basename =  'elim
 router.register(r'restaurarFilePublic',FileRestaurarPublicAPIView, basename =  'restaurarFilePublic-view')
 #buscarAvanzado
 router.register(r'busquedaAvanzada',FileBuscarAvanzadoAPIView, basename =  'buscarFileAvanzadoPublic-view')
+router.register(r'ocrService',FileUpdateOcreViewSet, basename =  'FileOcrService-view')
 urlpatterns = router.urls
