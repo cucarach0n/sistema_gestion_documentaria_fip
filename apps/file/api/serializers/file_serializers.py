@@ -113,7 +113,6 @@ class FileDetalleSerializer(serializers.ModelSerializer):
         owner = False
         if instance.user_id == self.context['userId']:
             owner = True
-        #print(folder)
         return{
             'nombre':instance.nombreDocumento,
             'nombreArchivo':instance.documento_file.name,
@@ -190,17 +189,17 @@ class FileBuscarSerializer(serializers.Serializer):
     history_type = serializers.CharField()
     history_user_id = serializers.IntegerField()'''
 class FileBuscarAvanzadoSerializer(serializers.Serializer):
-    tipoDoc = serializers.CharField(allow_blank=True)
-    nombreDoc = serializers.CharField(allow_blank=True)
-    numeroECS=serializers.CharField(allow_blank=True)
+    tipoDoc = serializers.CharField(allow_blank=True,allow_null = True)
+    nombreDoc = serializers.CharField(allow_blank=True,allow_null = True)
+    numeroECS=serializers.CharField(allow_blank=True,allow_null = True)
     '''numeroCompra=serializers.CharField(allow_blank=True)
     numeroServicio = serializers.CharField(allow_blank=True)'''
-    carpetaSlug = serializers.CharField(allow_blank=True)
+    carpetaSlug = serializers.CharField(allow_blank=True,allow_null = True)
     fechaInicio = serializers.DateField(allow_null = True)
     fechaFin = serializers.DateField(allow_null = True)
     opcionFecha = serializers.IntegerField(allow_null = True)
-    tipoCaracteristicaId = serializers.IntegerField(allow_null = True)
-    nombreCaracteristica = serializers.CharField(allow_null = True)
+    caracteristicaId = serializers.IntegerField(allow_null = True)
+    #nombreCaracteristica = serializers.CharField(allow_blank = True,allow_null = True)
     class Meta:
         model = File
 

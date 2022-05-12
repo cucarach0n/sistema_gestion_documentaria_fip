@@ -35,7 +35,7 @@ class FolderDetailSerializer(serializers.ModelSerializer):
             'slug':instance.slug,
             'nombre':instance.nombre,
             'rutaFisica':rutaLogica,
-            'rutaSlug':"/"+ruta,
+            'rutaSlug':ruta,
             'fechaCreacion':instance.fechaCreacion,
             'fechaUpdate':instance.fechaUpdate,
             'owner':owner,
@@ -56,7 +56,7 @@ class FolderDetailShareSerializer(serializers.ModelSerializer):
             'slug':instance.slug,
             'nombre':instance.nombre,
             'rutaFisica':newrutaLogica,
-            'rutaSlug':"/"+newRuta,
+            'rutaSlug':newRuta,
             'fechaCreacion':instance.fechaCreacion,
             'fechaUpdate':instance.fechaUpdate
         }
@@ -191,7 +191,7 @@ class FolderDirecotorioListSerializer(serializers.ModelSerializer):
             'slug':instance.slug,
             'nombre':instance.nombre,
             'rutaLogica': rutaLogica,
-            'rutaSlug': "/"+ruta,
+            'rutaSlug': ruta,
             'fechaCreacion':instance.fechaCreacion,
             'fechaUpdate':instance.fechaUpdate,
             'publico':instance.scope,
@@ -318,11 +318,13 @@ class FolderHistorySerializer(serializers.ModelSerializer):
     def to_representation(self,instance):
         folderResult = Folder.objects.filter(id = instance.id).first()
         if(folderResult == None):
+            nombre = ""
             ruta ="Eliminado"
         else:
+            nombre = folderResult.nombre
             ruta = obtenerRuta(folderResult.id,[folderResult.nombre],True)
         return {
-            'folderName':instance.nombre,
+            'folderName':nombre,
             'rutaLogica': ruta,
             'fechaCreacion' : instance.history_date,
             'accion':instance.history_change_reason,

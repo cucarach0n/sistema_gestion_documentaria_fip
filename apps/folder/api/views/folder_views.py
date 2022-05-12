@@ -93,7 +93,7 @@ class FolderViewSet(Authentication,viewsets.GenericViewSet):
             except:
                 return None
     def list(self,request):
-
+       
         folders = FolderDirecotorioListSerializer(self.get_queryset(),many = True,context = {'userId':self.userFull.id,'userStaff': self.userFull.is_staff})
 
         '''
@@ -373,7 +373,11 @@ class FolderHistoryAPIView(Authentication,viewsets.GenericViewSet):
         historyFolder = paginator.get_page(page)
         print(paginator.num_pages)
         folderHistorialSerializer = self.get_serializer(historyFolder,many = True)
-        return Response(folderHistorialSerializer.data, status = status.HTTP_200_OK)
+        '''folderHistorialSerializer = self.get_serializer(
+            {"historyFolder":historyFolder,
+            "paginas":paginator.num_pages})'''
+        return Response( {"historyFolder":folderHistorialSerializer.data,
+            "paginas":paginator.num_pages}, status = status.HTTP_200_OK)
     def retrieve(self,request,pk = None):
         folderResult = Folder.objects.get(slug = pk)
         if folderResult:

@@ -13,9 +13,12 @@ class CaracteristicaFileViewSet(Authentication,viewsets.GenericViewSet):
             return Response({'mensaje':'creado satisfactoriamente'},status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self,request,pk=None):
-        serializer = CaracteristicaFileDeleteSerializer(data=request.data,context = request.data)
+class CaracteristicaFileDeleteViewSet(Authentication,viewsets.GenericViewSet):
+    serializer_class = CaracteristicaFileDeleteSerializer
+
+    def create(self,request):
+        serializer = self.serializer_class(data=request.data,context = request.data)
         if(serializer.is_valid()):
             serializer.delete()
-            return Response({'mensaje':'eliminado satisfactoriamente'},status=status.HTTP_201_CREATED)
+            return Response({'mensaje':'eliminado satisfactoriamente'},status=status.HTTP_200_OK)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)

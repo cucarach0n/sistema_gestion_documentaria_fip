@@ -15,7 +15,7 @@ class File(models.Model):
     nombreDocumento = models.CharField('Nombres del documento',max_length=250,null = False, blank = False)
     contenidoOCR = models.TextField('Contenidos del documento', null = True, blank = True)
     documento_file = models.FileField('Archivo del documento', upload_to="",blank = False,null = False)
-    extension = models.CharField('Extension de los archivos subidos',max_length=10,null = True, blank = True)
+    extension = models.CharField('Extension de los archivos subidos',max_length=20,null = True, blank = True)
     unidadArea = models.ForeignKey(UnidadArea,on_delete = models.CASCADE,null=True,blank=True)
     scope = models.BooleanField(default = True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False)
