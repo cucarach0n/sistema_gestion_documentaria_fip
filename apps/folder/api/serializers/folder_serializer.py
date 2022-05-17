@@ -270,7 +270,7 @@ class FolderTrashPublicListSerializer(serializers.ModelSerializer):
         fileQuery = File.objects.filter(scope = True,fileinfolder__parent_folder__id =instance.id,eliminado =True)
 
         folder = FolderDetailShareSerializer(folderQuery,many = True)
-        files = FileDetalleSerializer(fileQuery,many = True,context = {'padre':instance.id})
+        files = FileDetalleSerializer(fileQuery,many = True,context = {'userId':self.context['userId'],'padre':instance.id})
         ruta = obtenerRuta(instance.id,[instance.slug],False)
         rutaLogica = obtenerRuta(instance.id,[instance.nombre],True)
         newRuta,newrutaLogica = crearRutaCompartida(ruta,rutaLogica,'Papelera Publica') 
