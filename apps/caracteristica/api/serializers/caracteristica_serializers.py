@@ -12,6 +12,10 @@ class CaracteristicaCreateSerializer(serializers.ModelSerializer):
             'nombreCaracteristica': instance.nombreCaracteristica,
             'tipoCaracteristica': tipoCaracteristica.nombreTipo
         }
+class CaracteristicaUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Caracteristica
+        fields = ['nombreCaracteristica']
 class CaracteristicaFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Caracteristica

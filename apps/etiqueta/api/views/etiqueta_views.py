@@ -3,7 +3,7 @@ from apps.etiqueta.models import Etiqueta
 from apps.file.models import File
 from rest_framework.response import Response
 from rest_framework import status
-from apps.etiqueta.api.serializers.etiqueta_serializers import EtiquetaCreateSerializer,EtiquetaBuscarSerializer, EtiquetaListSerializer
+from apps.etiqueta.api.serializers.etiqueta_serializers import EtiquetaCreateSerializer,EtiquetaBuscarSerializer, EtiquetaListSerializer, EtiquetaUpdateSerializer
 from apps.users.authenticacion_mixings import Authentication
 from rest_framework import viewsets
 
@@ -51,6 +51,18 @@ class EtiquetaBuscarViewSet(Authentication,viewsets.GenericViewSet):
             
             return Response({'mensaje':'etiqueta eliminado correctamente'},status = status.HTTP_200_OK)
         return Response({'error':'La etiqueta no existe'},status = status.HTTP_200_OK)'''
+class EtiquetaUpdateViewSet(Authentication, viewsets.GenericViewSet):
+    serializer_class = EtiquetaUpdateSerializer
+    def get_queryset(self,pk = None):
+        return self.get_serializer().Meta.model.objects.get(id = pk)
+    
+    def update(self,request,pk):
+        etiqueta = self.get_queryset(pk)
+        serializer = self.get_serializer(etiqueta,data=request.data)
+        if(serializer.is_valid()):
+            serializer.save()
+            return Response({"mensaje":"actualizado correctamente"},status=status.HTTP_200_OK)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
 

@@ -1,4 +1,5 @@
 from datetime import datetime
+from email.mime import application
 import os
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
@@ -14,10 +15,11 @@ from apps.folder.models import Folder, FolderInFolder
 from django.utils.crypto import get_random_string
 import platform
 from django.db.models import Q
+from django.db import transaction
 import requests
 import unicodedata
+import pathlib
 from django.core.files.storage import FileSystemStorage
-from django.db import transaction
 os.environ['OMP_THREAD_LIMIT'] = '1'
 sistema = platform.system()
 if(sistema == "Windows"):
@@ -34,7 +36,78 @@ class ASCIIFileSystemStorage(FileSystemStorage):
     def get_valid_name(self, name):
         name = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore')
         return super(ASCIIFileSystemStorage, self).get_valid_name(name)
-
+def obtenerFiles(slugArray):
+    files = []
+    for slug in slugArray:
+        file = File.objects.filter(slug = slug).first()
+        if file:
+            files.append(file)
+    return files
+def extraerExtencion(Archivo):
+    '''extension = [["jpg","image/jpg"]
+                ,["jpeg","image/jpeg"]
+                ,["png","image/png"]
+                ,["gif","image/gif"]
+                ,["xlsx","application/vnd.ms-excel"]
+                ,["docx","application/msword"]
+                ,["pptx","application/vnd.ms-powerpoint"]
+                ,["pdf","application/pdf"]
+                ,["txt","text/plain;charset=UTF-8"]
+                ,["zip","application/zip"]
+                ,["rar","application/x-rar-compressed"]
+                ,["mp4","audio/mp4"]
+                ,["mpeg","video/mpeg"]
+                ]'''
+    extension = [[".jpg","image/jpeg"]
+                ,[".jpeg","image/jpeg"]
+                ,[".png","image/png"]
+                ,[".gif","image/gif"]
+                ,[".pdf","application/pdf"]
+                ,[".txt","text/plain"]
+                ,[".mp4","video/mp4"]
+                ,[".mpeg","video/mpeg"]
+                ,[".xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
+                ,[".xls","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
+                ,[".docx","application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+                ,[".doc","application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+                ,[".pptx","application/vnd.openxmlformats-officedocument.presentationml.presentation"]
+                ,[".zip","application/x-zip-compressed"]
+                ,[".rar","application/x-rar-compressed"]
+                ]
+    path = pathlib.Path(settings.MEDIA_ROOT+'files/' + Archivo)
+    ext,aplication = None,None
+    for e in extension:
+        if e[0] in ''.join(path.suffixes):
+            ext = e[0][1:]
+            aplication =e[1]
+            return ext,aplication      
+    if ext == None:
+        ext =''.join(path.suffixes)[1:]
+        aplication = ''
+        return ext,aplication
+def shareFile_email(data,files):
+    files = obtenerFiles(files)
+    media = settings.MEDIA_ROOT+'files/'
+    context = {'email':data['email'],'usuario':data['usuario'],'mensaje':data['mensaje']}
+    #template = get_template(settings.TEMPLATE_DIRS[0].replace("\\","/")[:64] +'/templates/correo.html')#64 windows / 66 linux
+    template = get_template('sendFile.html')
+    content = template.render(context)
+    email = EmailMultiAlternatives(
+        data['asunto'],
+        data['usuario'].name +" " + data['usuario'].last_name + " ha compartido un documento con usted",
+        "Documento Share-FIP <"+settings.EMAIL_HOST_USER+">",
+        [data['email']]
+    )
+    
+    for file in files:
+        fileOpen = open(media+file.documento_file.name,'rb')
+        ext, application = extraerExtencion(file.documento_file.name)
+        email.attach(file.nombreDocumento,fileOpen.read(),application)
+        fileOpen.close()
+    
+    email.attach_alternative(content,'text/html')
+    email.send()
+    return content
 def send_email(data):
     context = {'email':data['email'],'domain':data['domain'],'usuario':data['usuario'],'password':data['password']}
     #template = get_template(settings.TEMPLATE_DIRS[0].replace("\\","/")[:64] +'/templates/correo.html')#64 windows / 66 linux

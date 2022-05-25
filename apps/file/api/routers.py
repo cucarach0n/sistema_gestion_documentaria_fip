@@ -1,3 +1,4 @@
+from apps.file.api.views.file_email_views import FileShareEmailAPIView
 from apps.file.api.views.file_finds_views import FileBuscarAvanzadoAPIView
 from apps.file.api.views.file_trash_views import FileDeletePublicAPIView, FileRestaurarPublicAPIView
 from rest_framework.routers import DefaultRouter
@@ -31,4 +32,6 @@ router.register(r'restaurarFilePublic',FileRestaurarPublicAPIView, basename =  '
 #buscarAvanzado
 router.register(r'busquedaAvanzada',FileBuscarAvanzadoAPIView, basename =  'buscarFileAvanzadoPublic-view')
 router.register(r'ocrService',FileUpdateOcreViewSet, basename =  'FileOcrService-view')
+#enviar file email
+router.register(r'share',FileShareEmailAPIView, basename =  'sendFile-view')
 urlpatterns = router.urls

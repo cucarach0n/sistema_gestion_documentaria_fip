@@ -39,3 +39,7 @@ class EtiquetaBuscarSerializer(serializers.Serializer):
          
     def validate(self,data):
         return data
+class EtiquetaUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Etiqueta
+        fields = ['nombre']

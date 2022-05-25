@@ -362,7 +362,7 @@ class FolderHistoryAPIView(Authentication,viewsets.GenericViewSet):
         if pk is not None:
             return Folder.historical.filter(id = pk,history_user_id=self.userFull.id)
         return Folder.historical.filter(history_user_id=self.userFull.id)
-    def list(self,request):
+    def create(self,request):
         historyFolder = self.get_queryset()
         paginator = Paginator(historyFolder,10)
         try:
