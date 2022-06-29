@@ -1,11 +1,12 @@
 from apps.base.util import setHistory
 from apps.folder.api.serializers.folder_serializer import FolderSerializer
+from apps.folder.models import Folder
 from rest_framework import viewsets
 from apps.users.authenticacion_mixings import Authentication
 from rest_framework.response import Response
 from rest_framework import status
 from apps.unidadArea.api.serializers.general_serializers import UnidadArea_Serializer
-from apps.unidadArea.api.serializers.unidadArea_serializers import UnidadAreaCreate_Serializer,UnidadAreaDeleteSerializer
+from apps.unidadArea.api.serializers.unidadArea_serializers import UnidadAreaCreate_Serializer,UnidadAreaDeleteSerializer, UnidadAreaUpdate_Serializer
 from django.utils.crypto import get_random_string  
 
 class unidadAreaCreateAPIView(Authentication,viewsets.GenericViewSet):
@@ -57,6 +58,23 @@ class unidadAreaListAPIView(Authentication,viewsets.GenericViewSet):
                 return Response(unidadArea_serializer.data,status = status.HTTP_200_OK)
             return Response({'error':'No existe la unidad'},status = status.HTTP_400_BAD_REQUEST)
         return Response({'Error':'No permitido'},status = status.HTTP_403_FORBIDDEN)  
+class unidadAreaUpdatePIView(Authentication,viewsets.GenericViewSet):
+    serializer_class = UnidadAreaUpdate_Serializer
+
+    def get_queryset(self,pk = None):
+        return self.get_serializer().Meta.model.objects.get(id = pk)
+    def update(self,reques,pk = None):
+        if self.userFull.is_superuser:
+            unidadArea_serializer = self.serializer_class(self.get_queryset(pk),data = reques.data)
+            if unidadArea_serializer.is_valid():
+                folderGestion = Folder.objects.filter(carpeta_hija__isnull =True,unidadArea_id = pk).first()
+                folderGestion.nombre = unidadArea_serializer.validated_data['nombreUnidad']
+                folderGestion.save()
+                unidadArea_serializer.save()
+                return Response({'mensaje':'actualizado correctamente'},status = status.HTTP_200_OK)
+            return Response(unidadArea_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
+        return Response({'Error':'No permitido'},status = status.HTTP_403_FORBIDDEN)
+        
 class unidadAreaBuscarAPIView(Authentication,viewsets.GenericViewSet):
 
     serializer_class = UnidadArea_Serializer

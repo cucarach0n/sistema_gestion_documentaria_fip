@@ -94,7 +94,7 @@ class UserCreateAPIView(generics.CreateAPIView):
                 
                 absurl = 'https://'+current_site+'/usuario/validar/'+userSendEmail.token
                 #enviar email
-                send_email({'email':'devalo19@gmail.com','domain': str(absurl),'usuario':user,'password':serializer.validated_data['password']})
+                send_email({'email':user.correo,'domain': str(absurl),'usuario':user,'password':serializer.validated_data['password']})
             userCreadoSerializer = UserSerializer(user)
             
             return Response(userCreadoSerializer.data,status = status.HTTP_200_OK)
@@ -194,10 +194,16 @@ class userUpdateAPIView(Authentication,generics.UpdateAPIView):
                     if userUpdate.validated_data['password'] != None and userUpdate.validated_data['password'] != "":
                         user.set_password(userUpdate.validated_data['password'])
                         #context = {'email':data['email'],'domain':data['domain'],'usuario':data['usuario'],'password':data['password']}
-                        data = {'email':"devalo19@gmail.com",'domain':'https://fipdigital.info','usuario':user,'password':userUpdate.validated_data['password']}
+                        data = {'email':user.correo,'domain':'https://fipdigital.info','usuario':user,'password':userUpdate.validated_data['password']}
                         send_password(data)
                     if userUpdate.validated_data['avatar'] != None and userUpdate.validated_data['avatar'] != "":
                         user.avatar = userUpdate.validated_data['avatar']
+                    folderMasterPrivate = Folder.objects.get(scope = False,
+                                                        unidadArea_id = self.userFull.unidadArea_id,
+                                                        user_id =self.userFull.id,
+                                                        carpeta_hija__isnull =True,eliminado = False)
+                    folderMasterPrivate.nombre = "Carpeta privada de "+ userUpdate.validated_data['name'][:1].upper() + userUpdate.validated_data['name'][1:] + " " + userUpdate.validated_data['last_name'][:1].upper() + "."
+                    folderMasterPrivate.save()
                     user.save()
                     return Response({'Mensaje':'Usuario actualizado correctamente'},status = status.HTTP_200_OK)
                 return Response(userUpdate.errors,status = status.HTTP_400_BAD_REQUEST)

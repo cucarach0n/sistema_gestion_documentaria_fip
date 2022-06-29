@@ -33,6 +33,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     avatar = models.ImageField('Imagen de perfil', upload_to='avatars/', default="avatars/avataruni.png",max_length=255, null=True, blank = True)
     estado = models.SmallIntegerField('Estado del usuario',null = True, default=1, blank = False)
     unidadArea = models.ForeignKey(UnidadArea, on_delete=models.CASCADE,null =True,blank=True)
+    fechaCreacion = models.DateTimeField("Fecha de creacion",auto_now_add=True)
+    fechaUpdate = models.DateTimeField("Fecha de actualizacion",auto_now=True)
     is_active = models.BooleanField(default = True)
     is_staff = models.SmallIntegerField('Staff',null = True, default=1, blank = True)
     historical = HistoricalRecords(excluded_fields=['name','last_name','avatar','estado','unidadArea','is_active','is_staff','correo','password','last_login','is_superuser'])

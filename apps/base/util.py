@@ -1,6 +1,7 @@
 from datetime import datetime
 from email.mime import application
 import os
+import time
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
@@ -361,4 +362,9 @@ def sendFileToProcess(slug,fileName):
     files = {'document': openFile}
     print("enviando file a OcrSevice")
     res = requests.post(config("URL_OCR")+'/servicioOcr/uploadOCR/', files=files,data=data)
+    while res.status_code != 200:
+        print("Error al enviar el file a OcrSevice")
+        time.sleep(60)
+        print(res.text)
+        res = requests.post(config("URL_OCR")+'/servicioOcr/uploadOCR/', files=files,data=data)
     print(res.text)

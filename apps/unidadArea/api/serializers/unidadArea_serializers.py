@@ -15,3 +15,7 @@ class UnidadAreaDeleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = UnidadArea
         fields = ['id']
+class UnidadAreaUpdate_Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = UnidadArea
+        fields = ['nombreUnidad']

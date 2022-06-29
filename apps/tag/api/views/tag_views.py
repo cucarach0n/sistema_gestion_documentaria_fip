@@ -78,6 +78,12 @@ class TagAPIView(viewsets.GenericViewSet):
                 return Response({'mensaje':'Se actualizo correctamente el tag'},status = status.HTTP_200_OK)
             return Response(tag_serializer.errors,status = status.HTTP_400_BAD_REQUEST)
         return Response({'error':'No existe el tag'},status = status.HTTP_400_BAD_REQUEST)
+    def destroy(self,request,pk):
+        tag = self.get_queryset(pk)
+        if tag:
+            tag.delete()
+            return Response({'mensaje':'tag eliminado correctamente'},status = status.HTTP_200_OK)
+        return Response({'error':'el tag no existe'},status = status.HTTP_200_OK)
             
     
      
